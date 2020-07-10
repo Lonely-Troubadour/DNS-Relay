@@ -1,10 +1,28 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "dnsutils.h"
 
+/**
+ * Generates DNS query ID.
+ * ID is a 16 bits random number.
+ * ------------------------------
+ * Parameters: None
+ * Returns: id.
+ */
 uint16_t gen_id() {
+    // TODO: Generate a random 16 bits number
+    // 1234 -> 0x04d2
     return 1234;
 }
 
+/**
+ * Generate DNS request header
+ * Header is 12 bytes.
+ * -------------------------
+ * Parameters: None
+ * Returns: Pointer to the header.
+ */
 struct header * gen_header() {
     struct header* ptr_header;
 
@@ -21,5 +39,59 @@ struct header * gen_header() {
     (*ptr_header).id = htons(gen_id());
     (*ptr_header).flags = htons(0x0100); // Standard query
     (*ptr_header).qd_count = htons(1);
+
+    return ptr_header;
+}
+
+/**
+ * Generates DNS request
+ * Request contains header, queries, 
+ * type and class sections.
+ * --------------------------------
+ * Parameters:
+ *     request: pointer to the request.
+ *     name: constant char pointer. Points to the name string.
+ * Returns:
+ *     0 if success.
+ */
+int gen_dns_request(unsigned char *request, char *name) {
+    int pos = 0;
+    int len = 0;
+    char *token;
+    uint16_t q_type = htons(TYPE_A);
+    uint16_t q_class = htons(CLASS_IN);
+
+    /* Generates DNS header, copy the header to request header field */
+    struct header *dns_header = gen_header();
+    memcpy(request, dns_header, sizeof(struct header));
+    pos += sizeof(struct header);
+
+    /* Generate DNS query section */
+    token = strtok(name, ".");
+    while(token != NULL) {
+        len = strlen(token);
+        request[pos++] = len;
+        memcpy(request + pos, token, len);
+        pos += len;
+        token = strtok(NULL, ".");
+    }
+
+    /* Generate Type section */
+    memcpy(request + pos, &q_type, sizeof(q_type));
+    pos += sizeof(q_type);
+
+    /* Generate Class section */
+    memcpy(request + pos, &q_class, sizeof(q_class));
+    pos += sizeof(q_class);
     
+    /* Print for testing purpose. Delete later on. */
+    pos = 0;
+    while (1) {
+        printf("%.2x ", request[pos]);
+        pos++;
+        // c = query[pos];
+        if (pos == 50) break;
+    }
+
+    return 0;
 }
