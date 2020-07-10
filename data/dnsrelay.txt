@@ -1,0 +1,2 @@
+www.baidu.com 0.0.0.0
+www.github.com 140.82.113.4
