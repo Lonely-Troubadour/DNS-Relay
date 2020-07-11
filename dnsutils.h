@@ -33,4 +33,4 @@ struct header {
 
 uint16_t gen_id();
 struct header * gen_header();
-int gen_dns_request(unsigned char *query, char *name);
+int gen_dns_request(unsigned char *request, int *request_len, char *name);

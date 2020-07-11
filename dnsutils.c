@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <malloc/malloc.h>
 #include "dnsutils.h"
 
 /**
@@ -54,7 +55,7 @@ struct header * gen_header() {
  * Returns:
  *     0 if success.
  */
-int gen_dns_request(unsigned char *request, char *name) {
+int gen_dns_request(unsigned char *request, int *request_len, char *name) {
     int pos = 0;
     int len = 0;
     char *token;
@@ -75,6 +76,7 @@ int gen_dns_request(unsigned char *request, char *name) {
         pos += len;
         token = strtok(NULL, ".");
     }
+    request[pos++] = '\0';
 
     /* Generate Type section */
     memcpy(request + pos, &q_type, sizeof(q_type));
@@ -83,15 +85,9 @@ int gen_dns_request(unsigned char *request, char *name) {
     /* Generate Class section */
     memcpy(request + pos, &q_class, sizeof(q_class));
     pos += sizeof(q_class);
-    
-    /* Print for testing purpose. Delete later on. */
-    pos = 0;
-    while (1) {
-        printf("%.2x ", request[pos]);
-        pos++;
-        // c = query[pos];
-        if (pos == 50) break;
-    }
+
+    /* Update request length */
+    *request_len = pos;
 
     return 0;
 }
