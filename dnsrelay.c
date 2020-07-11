@@ -6,31 +6,36 @@
 
 int main(int argc, char const *argv[])
 {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: dnstest name");
-        exit(1);
-    }
-
     char name[MAX_LENGTH];
     unsigned char request[BUF_SIZE];
     int request_len = 0;
     int result = 0;
     struct sockaddr_in *addr;
     int addr_size = 0;
-
+    int sock = 0;
+    
+    /* Initialize variables */
     memset(name, 0, MAX_LENGTH);
     memset(request, 0, BUF_SIZE);
     addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
 
-    strcpy(name, argv[1]);
-    // printf("%s\n", name);
+    if (argc < 2) {
+        fprintf(stderr, "Usage: dnsrelay name");
+        exit(1);
+    }
 
-    gen_dns_request(request, &request_len, name);
+    strcpy(name, argv[1]);
+    
+    if (gen_dns_request(request, &request_len, name)) {
+        fprintf(stderr, "ERROR: Generate DNS request failed.\n");
+        exit(1);
+    }
+
     addr_size = gen_in_addr(addr);
 
     // FILE *fp = NULL;
     // fp = fopen("./data/dnsrelay.txt", "r");
-    int sock = init_socket();
+    sock = init_socket();
     result = sendto(sock, request, request_len, 0, (struct sockaddr*)addr, \
     addr_size);
 
@@ -50,13 +55,13 @@ int main(int argc, char const *argv[])
 int init_socket() {
     /** 
      * Parameters specification:
-     * PF_INET: IPv4 protocols, Internet addresses.
-     * SOCK_DGRAM: UDP, connectionless, messages of max length.
-     * 0: Default protocol.
+     *     PF_INET: IPv4 protocols, Internet addresses.
+     *     SOCK_DGRAM: UDP, connectionless, messages of max length.
+     *     0: Default protocol.
      */
     int sock_id = socket (PF_INET, SOCK_DGRAM, 0);
     if (sock_id < 0) {
-        fprintf(stderr, "ERROR! Creating socket failed.\n");
+        fprintf(stderr, "ERROR: Create socket failed.\n");
         exit(1);
     }
 

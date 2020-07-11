@@ -14,7 +14,8 @@
 uint16_t gen_id() {
     // TODO: Generate a random 16 bits number
     // 1234 -> 0x04d2
-    return 1234;
+    // 65535 -> 0xFFFF
+    return rand() % 65535;
 }
 
 /**
@@ -25,7 +26,7 @@ uint16_t gen_id() {
  * Returns: Pointer to the header.
  */
 struct header * gen_header() {
-    struct header* ptr_header;
+    struct header* ptr_header = NULL;
 
     /* Allocate memory space */
     ptr_header = (struct header*) malloc (sizeof(struct header));
@@ -53,7 +54,7 @@ struct header * gen_header() {
  *     request: pointer to the request.
  *     name: constant char pointer. Points to the name string.
  * Returns:
- *     0 if success.
+ *     0 if success. 1 if failed.
  */
 int gen_dns_request(unsigned char *request, int *request_len, char *name) {
     int pos = 0;
@@ -71,18 +72,22 @@ int gen_dns_request(unsigned char *request, int *request_len, char *name) {
     token = strtok(name, ".");
     while(token != NULL) {
         len = strlen(token);
+        if ((pos + len + 1) > BUF_SIZE) return 1;
         request[pos++] = len;
         memcpy(request + pos, token, len);
         pos += len;
         token = strtok(NULL, ".");
     }
+    if ((pos + 1) > BUF_SIZE) return 1;
     request[pos++] = '\0';
 
     /* Generate Type section */
+    if ((pos + sizeof(q_type)) > BUF_SIZE) return 1;
     memcpy(request + pos, &q_type, sizeof(q_type));
     pos += sizeof(q_type);
 
     /* Generate Class section */
+    if ((pos + sizeof(q_class)) > BUF_SIZE) return 1;
     memcpy(request + pos, &q_class, sizeof(q_class));
     pos += sizeof(q_class);
 
