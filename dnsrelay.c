@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "dnsrelay.h"
 #include "dnsutils.h"
 
@@ -8,40 +9,95 @@ int main(int argc, char const *argv[])
 {
     char name[MAX_LENGTH];
     unsigned char request[BUF_SIZE];
+    unsigned char recv[BUF_SIZE];
+
+    struct sockaddr_in *dns_addr;
+    struct sockaddr_in *server_addr;
+    struct sockaddr_in client_addr;
+
     int request_len = 0;
-    int result = 0;
-    struct sockaddr_in *addr;
-    int addr_size = 0;
+    int send_len = 0;
+    int recv_len = 0;
+    socklen_t dns_addr_size = 0;
+    socklen_t server_addr_size = 0;
+    socklen_t client_addr_size = sizeof(client_addr);
     int sock = 0;
     
     /* Initialize variables */
     memset(name, 0, MAX_LENGTH);
     memset(request, 0, BUF_SIZE);
-    addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+    memset(recv, 0, BUF_SIZE);
+    dns_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+    server_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
 
-    if (argc < 2) {
-        fprintf(stderr, "Usage: dnsrelay name");
-        exit(1);
-    }
+    // if (argc < 2) {
+    //     perror("Usage: dnsrelay data\n");
+    //     exit(1);
+    // }
 
-    strcpy(name, argv[1]);
+    // strcpy(name, argv[1]);
     
-    if (gen_dns_request(request, &request_len, name)) {
-        fprintf(stderr, "ERROR: Generate DNS request failed.\n");
+    // if (gen_dns_request(request, &request_len, name)) {
+    //     perror("ERROR: Generate DNS request failed.\n");
+    //     exit(1);
+    // }
+
+    /* Create socket */
+    sock = init_socket();
+
+    /* Generate DNS server address and local server address */
+    if (gen_in_addr(dns_addr, &dns_addr_size, server_addr, &server_addr_size)) {
+        perror("ERROR: Generate addresses failed.\n");
         exit(1);
     }
-
-    addr_size = gen_in_addr(addr);
 
     // FILE *fp = NULL;
     // fp = fopen("./data/dnsrelay.txt", "r");
-    sock = init_socket();
-    result = sendto(sock, request, request_len, 0, (struct sockaddr*)addr, \
-    addr_size);
 
-    printf("Send result: \n");
-    printf("%d\n", result);
+    if (bind(sock, (struct sockaddr*)server_addr, server_addr_size) < 0) {
+        perror("ERROR: bind failed.\n");
+        exit(1);
+    }
+    
+    while(1) {
+        memset(recv, 0, BUF_SIZE);
+        client_addr_size = sizeof(client_addr);
 
+        printf("Listening...\n");
+
+        recv_len = recvfrom(sock, recv, BUF_SIZE, 0, \
+        (struct sockaddr*)&client_addr, &client_addr_size);
+        printf("%d\n", recv_len);
+        if (recv_len == -1) {
+            perror("ERROR: Receive failed.");
+            exit(1);
+        }
+
+        // TODO: parse dns request
+    }
+
+    /* Send DNS request */
+    // send_len = sendto(sock, request, request_len, 0, \
+    // (struct sockaddr*)dns_addr, dns_addr_size);
+    // if (send_len < 0) {
+    //     perror("ERROR: Send DNS request failed.\n");
+    //     exit(1);
+    // }
+    // printf("Send success, packet length: \n");
+    // printf("%d\n", send_len);
+
+    // /* Receive response */
+    // recv_len = recvfrom(sock, recv, sizeof(recv), 0, \
+    // (struct sockaddr*)dns_addr, &dns_addr_size);
+    // printf("Receive success, packet length: \n");
+    // printf("%d\n", recv_len);
+    // if (recv_len) {
+    //     perror("ERROR: receive packet failed.\n");
+    //     exit(1);
+    // }
+
+    /* Close socket */
+    close(sock);
     return 0;
 }
 
@@ -59,9 +115,9 @@ int init_socket() {
      *     SOCK_DGRAM: UDP, connectionless, messages of max length.
      *     0: Default protocol.
      */
-    int sock_id = socket (PF_INET, SOCK_DGRAM, 0);
+    int sock_id = socket (AF_INET, SOCK_DGRAM, 0);
     if (sock_id < 0) {
-        fprintf(stderr, "ERROR: Create socket failed.\n");
+        perror("ERROR: Create socket failed.\n");
         exit(1);
     }
 
@@ -77,15 +133,24 @@ int init_socket() {
  * Returns:
  *     Size of the address.
  */
-int gen_in_addr(struct sockaddr_in *addr) {
+int gen_in_addr(struct sockaddr_in *dns_addr, unsigned int *dns_addr_size, \
+struct sockaddr_in * server_addr, unsigned int *server_addr_size) {
     // For differences between sockaddr_in and sockaddr, goto:
     // https://stackoverflow.com/questions/21099041/
     // why-do-we-cast-sockaddr-in-to-sockaddr-when-calling-bind
     
-    memset(addr, 0, sizeof(struct sockaddr_in));
-    (*addr).sin_family = PF_INET;
-    (*addr).sin_addr.s_addr = inet_addr(PUBLIC_DNS_SERVER);
-    (*addr).sin_port = htons(PORT);
+    memset(dns_addr, 0, sizeof(struct sockaddr_in));
+    (*dns_addr).sin_family = AF_INET;
+    (*dns_addr).sin_addr.s_addr = inet_addr(DNS_SERVER);
+    (*dns_addr).sin_port = htons(PORT);
+    *dns_addr_size = sizeof(*dns_addr);
 
-    return sizeof(*addr);
+    memset(server_addr, 0, sizeof(struct sockaddr_in));
+    (*server_addr).sin_family = AF_INET;
+    (*server_addr).sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    // inet_addr(LOCAL_SERVER); 
+    (*server_addr).sin_port = htons(PORT);
+    *server_addr_size = sizeof(*server_addr);
+
+    return 0;
 }

@@ -31,7 +31,7 @@ struct header * gen_header() {
     /* Allocate memory space */
     ptr_header = (struct header*) malloc (sizeof(struct header));
     if (ptr_header == NULL) {
-        fprintf(stderr, "Generate header failed!");
+        perror("Generate header failed!\n");
         exit(1);
     }
     /* Initialize memory space */
