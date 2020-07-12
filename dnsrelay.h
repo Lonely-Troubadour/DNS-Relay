@@ -1,10 +1,10 @@
-#include <sys/socket.h>
-#include <sys/types.h>
-
 #if defined(_WIN32) || defined(_WIN64)
 #include <winsock2.h>
+typedef int socklen_t;
 #else
 #include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #endif
 
 #define PORT 53

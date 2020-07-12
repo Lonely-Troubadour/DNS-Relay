@@ -1,4 +1,11 @@
+#if defined(_WIN32) || defined(_WIN64)
+#include <winsock.h>
+#include <stdint.h>
+#include <malloc.h>
+#else
 #include <netinet/in.h>
+#include <malloc/malloc.h>
+#endif
 
 #define MAX_LENGTH 255
 #define BUF_SIZE 512
