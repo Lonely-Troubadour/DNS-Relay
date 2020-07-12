@@ -38,6 +38,17 @@ struct header {
     uint16_t ar_count;
 };
 
+union address {
+    struct in_addr ipv4;
+    struct in6_addr ipv6;
+};
+
+struct ip_addr {
+    int type;
+    union address addr;
+};
+
 uint16_t gen_id();
 struct header * gen_header();
 int gen_dns_request(unsigned char *request, int *request_len, char *name);
+int parse_query(char *msg, int size);

@@ -36,7 +36,7 @@ int main(int argc, char const *argv[])
     // }
 
     // strcpy(name, argv[1]);
-    
+    // strcpy(name, "www.bupt.edu.cn");
     // if (gen_dns_request(request, &request_len, name)) {
     //     perror("ERROR: Generate DNS request failed.\n");
     //     exit(1);
@@ -67,34 +67,59 @@ int main(int argc, char const *argv[])
 
         recv_len = recvfrom(sock, recv, BUF_SIZE, 0, \
         (struct sockaddr*)&client_addr, &client_addr_size);
-        printf("%d\n", recv_len);
+        printf("Received request: %d\n", recv_len);
         if (recv_len == -1) {
             perror("ERROR: Receive failed.");
             exit(1);
         }
+        
+        break;
 
         // TODO: parse dns request
     }
 
     /* Send DNS request */
-    // send_len = sendto(sock, request, request_len, 0, \
-    // (struct sockaddr*)dns_addr, dns_addr_size);
-    // if (send_len < 0) {
-    //     perror("ERROR: Send DNS request failed.\n");
-    //     exit(1);
-    // }
-    // printf("Send success, packet length: \n");
-    // printf("%d\n", send_len);
+    uint16_t id = 0;
+    memcpy(&id, recv, sizeof(uint16_t));
+    id++;
+    memcpy(request, recv, recv_len);
+    memcpy(request, &id, sizeof(uint16_t));
+    request_len = recv_len;
+    send_len = sendto(sock, request, request_len, 0, \
+    (struct sockaddr*)dns_addr, dns_addr_size);
+    if (send_len < 0) {
+        perror("ERROR: Send DNS request failed.\n");
+        exit(1);
+    }
+    printf("Send success, packet length: \n");
+    printf("%d\n", send_len);
 
-    // /* Receive response */
-    // recv_len = recvfrom(sock, recv, sizeof(recv), 0, \
-    // (struct sockaddr*)dns_addr, &dns_addr_size);
-    // printf("Receive success, packet length: \n");
-    // printf("%d\n", recv_len);
-    // if (recv_len) {
-    //     perror("ERROR: receive packet failed.\n");
-    //     exit(1);
-    // }
+    /* Receive response */
+    memset(recv, 0, BUF_SIZE);
+    recv_len = recvfrom(sock, recv, sizeof(recv), 0, \
+    (struct sockaddr*)dns_addr, &dns_addr_size);
+    if (recv_len < 0) {
+        perror("ERROR: receive packet failed.\n");
+        exit(1);
+    }
+    printf("Receive success, packet length: \n");
+    printf("%d\n", recv_len);
+    
+
+    /* Send back */
+    memcpy(&id, recv, sizeof(uint16_t));
+    id--;
+    memcpy(request, recv, recv_len);
+    memcpy(request, &id, sizeof(uint16_t));
+    request_len = recv_len;
+    send_len = sendto(sock, request, request_len, 0, \
+    (struct sockaddr*)&client_addr, client_addr_size);
+    if (send_len < 0) {
+        perror("ERROR: Send DNS request failed.\n");
+        exit(1);
+    }
+    printf("Send back success, packet length: \n");
+    printf("%d\n", send_len);
 
     /* Close socket */
     close(sock);
@@ -147,7 +172,7 @@ struct sockaddr_in * server_addr, unsigned int *server_addr_size) {
 
     memset(server_addr, 0, sizeof(struct sockaddr_in));
     (*server_addr).sin_family = AF_INET;
-    (*server_addr).sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    (*server_addr).sin_addr.s_addr = htonl(INADDR_ANY);
     // inet_addr(LOCAL_SERVER); 
     (*server_addr).sin_port = htons(PORT);
     *server_addr_size = sizeof(*server_addr);

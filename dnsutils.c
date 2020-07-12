@@ -95,3 +95,12 @@ int gen_dns_request(unsigned char *request, int *request_len, char *name) {
 
     return 0;
 }
+
+int parse_query(char *msg, int size) {
+    char name[MAX_LENGTH];
+    if (size < sizeof(struct header)) return 1;
+    
+    int pos = sizeof(struct header);
+
+    return 0;
+}
