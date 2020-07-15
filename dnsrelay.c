@@ -52,11 +52,13 @@ int main(int argc, char const *argv[])
         exit(1);
     }
 
+    /* Bind server socket for listening */
     if (bind(sock, (struct sockaddr*)server_addr, server_addr_size) < 0) {
         perror("ERROR: bind failed.\n");
         exit(1);
     }
     
+    /* Keeps listening on port 53 */
     while(1) {
         memset(recv, 0, BUF_SIZE);
         client_addr_size = sizeof(client_addr);
@@ -71,18 +73,16 @@ int main(int argc, char const *argv[])
             exit(1);
         }
         
-        break;
-
         // TODO: parse dns request
+        parse_query(recv, recv_len, name);
+        printf("%s", name);
+        break;
     }
 
     /* Send DNS request */
-    uint16_t id = 0;
-    // memcpy(&id, recv, sizeof(uint16_t));
-    // id++;
     memcpy(request, recv, recv_len);
-    // memcpy(request, &id, sizeof(uint16_t));
     request_len = recv_len;
+
     send_len = sendto(sock, request, request_len, 0, \
     (struct sockaddr*)dns_addr, dns_addr_size);
     if (send_len < 0) {
@@ -105,11 +105,9 @@ int main(int argc, char const *argv[])
     
 
     /* Send back */
-    // memcpy(&id, recv, sizeof(uint16_t));
-    // id--;
     memcpy(request, recv, recv_len);
-    // memcpy(request, &id, sizeof(uint16_t));
     request_len = recv_len;
+
     send_len = sendto(sock, request, request_len, 0, \
     (struct sockaddr*)&client_addr, client_addr_size);
     if (send_len < 0) {

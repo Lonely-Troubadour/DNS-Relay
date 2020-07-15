@@ -1,3 +1,20 @@
+/**
+ * This file is the header file for dns relay main program. 
+ * -------------------------------------------------------
+ * The header file defined some constants related to socket communication, 
+ * such as port to communicate, DNS server address, etc. 
+ * 
+ * Some important functions are defined here.
+ *     init_socket: Initialize and create a socket.
+ *     gen_in_addr: Initialize dns server addrs and local server address.
+ *     gen_in6_addr: Initialize IPv6 address.
+ * 
+ * The header file includes different system header files based on different OS.
+ * -----------------------------------------------------------------------------
+ * Authors: Yongjian Hu, Zhihao Song, Yutong Si
+ * License: GPLv3
+ * Date: 15-07-2020
+ */
 #ifndef _DNSRELAY_H_
 #define _DNSRELAY_H_
 

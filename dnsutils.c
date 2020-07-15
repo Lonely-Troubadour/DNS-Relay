@@ -95,11 +95,34 @@ int gen_dns_request(unsigned char *request, int *request_len, char *name) {
     return 0;
 }
 
-int parse_query(char *msg, int size) {
-    char name[MAX_LENGTH];
+/**
+ * Parse the received DNS request.
+ * ------------------------------
+ * Parameters:
+ *     msg: The DNS request message.
+ *     size: Size of the message.
+ *     name: The name to parse for.
+ * Returns:
+ *     0 if success.
+ */
+int parse_query(unsigned char *msg, int size, char *name) {
+    /* Length of the field */ 
+    uint8_t len = 0;
+    /* Skip the header, starts from the end of the header */
+    int pos = sizeof(struct header); 
+    int name_pos = 0;
+
     if (size < sizeof(struct header)) return 1;
-    
-    int pos = sizeof(struct header);
+
+    /* Read name */
+    while(msg[pos] != '\0') {
+        len = msg[pos++];
+        memcpy((name+name_pos), (msg+pos), len);
+        name_pos += len;
+        pos += len;
+        /* Add period '.' to name */
+        name[name_pos++] = '.';
+    }
 
     return 0;
 }

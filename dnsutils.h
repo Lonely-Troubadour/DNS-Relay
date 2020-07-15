@@ -1,3 +1,25 @@
+/**
+ * This file is the header file for dns utils, that contains some useful utils
+ * for DNS relay service.  
+ * -----------------------------------------------------------------------------
+ * The header file defined some constants related to DNS request, such as max 
+ * string length, max buffer size, types, classes, etc. 
+ * 
+ * Some important structers are defined here.
+ *     header: 12 bytes header for DNS query.
+ *     address: Address for either IPv4 address or IPv6 address
+ *     ip_addr: IP address.
+ * 
+ * Some important functions are defined here.
+ *     gen_header: Generates DNS query header.
+ *     parse_query: Parse received request.
+ * 
+ * The header file includes different system header files based on different OS.
+ * -----------------------------------------------------------------------------
+ * Authors: Yongjian Hu, Zhihao Song, Yutong Si
+ * License: GPLv3
+ * Date: 15-07-2020
+ */
 #ifndef _DNSUTILS_H_
 #define _DNSUTILS_H_
 
@@ -52,6 +74,6 @@ struct ip_addr {
 uint16_t gen_id();
 struct header * gen_header();
 int gen_dns_request(unsigned char *request, int *request_len, char *name);
-int parse_query(char *msg, int size);
+int parse_query(unsigned char *msg, int size, char *name);
 
 #endif
