@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include "dnsrelay.h"
 #include "dnsutils.h"
+#include "dbutils.h"
 
 int main(int argc, char const *argv[])
 {
@@ -51,9 +52,6 @@ int main(int argc, char const *argv[])
         exit(1);
     }
 
-    // FILE *fp = NULL;
-    // fp = fopen("./data/dnsrelay.txt", "r");
-
     if (bind(sock, (struct sockaddr*)server_addr, server_addr_size) < 0) {
         perror("ERROR: bind failed.\n");
         exit(1);
@@ -80,10 +78,10 @@ int main(int argc, char const *argv[])
 
     /* Send DNS request */
     uint16_t id = 0;
-    memcpy(&id, recv, sizeof(uint16_t));
-    id++;
+    // memcpy(&id, recv, sizeof(uint16_t));
+    // id++;
     memcpy(request, recv, recv_len);
-    memcpy(request, &id, sizeof(uint16_t));
+    // memcpy(request, &id, sizeof(uint16_t));
     request_len = recv_len;
     send_len = sendto(sock, request, request_len, 0, \
     (struct sockaddr*)dns_addr, dns_addr_size);
@@ -107,10 +105,10 @@ int main(int argc, char const *argv[])
     
 
     /* Send back */
-    memcpy(&id, recv, sizeof(uint16_t));
-    id--;
+    // memcpy(&id, recv, sizeof(uint16_t));
+    // id--;
     memcpy(request, recv, recv_len);
-    memcpy(request, &id, sizeof(uint16_t));
+    // memcpy(request, &id, sizeof(uint16_t));
     request_len = recv_len;
     send_len = sendto(sock, request, request_len, 0, \
     (struct sockaddr*)&client_addr, client_addr_size);
@@ -121,8 +119,11 @@ int main(int argc, char const *argv[])
     printf("Send back success, packet length: \n");
     printf("%d\n", send_len);
 
-    /* Close socket */
+    /* Close socket and clean up memory */
     close(sock);
+    if (dns_addr) free(dns_addr);
+    if (server_addr) free(server_addr);
+
     return 0;
 }
 

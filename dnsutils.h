@@ -1,10 +1,11 @@
+#ifndef _DNSUTILS_H_
+#define _DNSUTILS_H_
+
 #if defined(_WIN32) || defined(_WIN64)
 #include <winsock.h>
 #include <stdint.h>
-#include <malloc.h>
 #else
 #include <netinet/in.h>
-#include <malloc/malloc.h>
 #endif
 
 #define MAX_LENGTH 255
@@ -52,3 +53,5 @@ uint16_t gen_id();
 struct header * gen_header();
 int gen_dns_request(unsigned char *request, int *request_len, char *name);
 int parse_query(char *msg, int size);
+
+#endif

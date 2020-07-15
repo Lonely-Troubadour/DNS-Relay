@@ -11,7 +11,6 @@
  * Returns: id.
  */
 uint16_t gen_id() {
-    // TODO: Generate a random 16 bits number
     // 1234 -> 0x04d2
     // 65535 -> 0xFFFF
     return rand() % 65535;
