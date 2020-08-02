@@ -8,6 +8,7 @@
 
 int main(int argc, char const *argv[])
 {
+    struct query queries[MAX_QUERIES];
     char name[MAX_LENGTH];
     unsigned char request[BUF_SIZE];
     unsigned char recv[BUF_SIZE];
@@ -23,6 +24,7 @@ int main(int argc, char const *argv[])
     socklen_t server_addr_size = 0;
     socklen_t client_addr_size = sizeof(client_addr);
     int sock = 0;
+    int parse_query_res = 0;
     
     /* Initialize variables */
     memset(name, 0, MAX_LENGTH);
@@ -74,8 +76,17 @@ int main(int argc, char const *argv[])
         }
         
         // TODO: parse dns request
-        parse_query(recv, recv_len, name);
-        printf("%s", name);
+        parse_query_res = parse_query(recv, recv_len, queries, SIZEOF_ARR(queries));
+        if (parse_query_res == 0)
+        {
+            // printf("%s", name);
+            printf("success to parse query info {name: %s, type: %d, class: %d}\n", queries[0].name, queries[0].ques.qtype, queries[0].ques.qclass);
+        }
+        else
+        {
+            printf("failed to parse query info, return %d\n", parse_query_res);
+        }
+
         break;
     }
 

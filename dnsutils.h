@@ -30,6 +30,9 @@
 #include <netinet/in.h>
 #endif
 
+#define SIZEOF_ARR(arr) (sizeof(arr)/sizeof(arr[0]))
+
+#define MAX_QUERIES 4
 #define MAX_LENGTH 255
 #define BUF_SIZE 512
 #define TYPE_A 1
@@ -61,6 +64,25 @@ struct header {
     uint16_t ar_count;
 };
 
+/*
+ *   DNS Queries structer
+ *   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+ *   |                     qname                     |
+ *   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+ *   |         qtype        |         qclass         |
+ *   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+ */
+struct qtypeclass
+{
+    unsigned short qtype;
+    unsigned short qclass;
+};
+struct query
+{
+    unsigned char name[MAX_LENGTH];
+    struct qtypeclass ques;
+};
+
 union address {
     struct in_addr ipv4;
     struct in6_addr ipv6;
@@ -74,6 +96,6 @@ struct ip_addr {
 uint16_t gen_id();
 struct header * gen_header();
 int gen_dns_request(unsigned char *request, int *request_len, char *name);
-int parse_query(unsigned char *msg, int size, char *name);
+int parse_query(unsigned char *msg, int msg_size, struct query *queries, int queries_len);
 
 #endif
