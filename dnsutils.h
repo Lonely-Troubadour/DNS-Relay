@@ -72,15 +72,11 @@ struct header {
  *   |         qtype        |         qclass         |
  *   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
  */
-struct qtypeclass
-{
-    unsigned short qtype;
-    unsigned short qclass;
-};
 struct query
 {
     unsigned char name[MAX_LENGTH];
-    struct qtypeclass ques;
+    uint16_t qtype;
+    uint16_t qclass;
 };
 
 union address {
@@ -97,5 +93,6 @@ uint16_t gen_id();
 struct header * gen_header();
 int gen_dns_request(unsigned char *request, int *request_len, char *name);
 int parse_query(unsigned char *msg, int msg_size, struct query *queries, int queries_len);
-
+int parse_domain(unsigned char *dns, int offset, unsigned char *domain, int *domain_len);
+int parse_one_query(unsigned char *dns, int left, int offset, struct query *queries, int *query_len);
 #endif

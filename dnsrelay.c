@@ -80,7 +80,7 @@ int main(int argc, char const *argv[])
         if (parse_query_res == 0)
         {
             // printf("%s", name);
-            printf("success to parse query info {name: %s, type: %d, class: %d}\n", queries[0].name, queries[0].ques.qtype, queries[0].ques.qclass);
+            printf("success to parse query info {name: %s, type: %d, class: %d}\n", queries[0].name, queries[0].qtype, queries[0].qclass);
         }
         else
         {
