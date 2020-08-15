@@ -10,14 +10,14 @@ int main(int argc, char const *argv[])
                                     0X01, 0X00, 0X00, 0X01, 0Xe3, 0X00, 0X04, 0X27, 0X9c, 0X45, 0X4f, 0Xc0, 0X0c, 0X00, 0X01, 0X00,
                                     0X01, 0X00, 0X00, 0X01, 0Xe3, 0X00, 0X04, 0Xdc, 0Xb5, 0X26, 0X94};
 
-  struct query queries[MAX_QUERIES];
+  struct query dnsquery;
   int parse_res = 0;
 
-  parse_res = parse_query(request_domain, sizeof(request_domain), queries, SIZEOF_ARR(queries));
+  parse_res = parse_query(request_domain, sizeof(request_domain), &dnsquery);
   if (parse_res == 0)
   {
     // printf("%s", name);
-    printf("success to parse query info {name: %s, type: %d, class: %d}\n", queries[0].name, queries[0].qtype, queries[0].qclass);
+    printf("success to parse query info {name: %s, type: %d, class: %d}\n", dnsquery.name, dnsquery.qtype, dnsquery.qclass);
   }
   else
   {

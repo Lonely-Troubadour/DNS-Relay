@@ -8,7 +8,7 @@
 
 int main(int argc, char const *argv[])
 {
-    struct query queries[MAX_QUERIES];
+    struct query dnsquery;
     char name[MAX_LENGTH];
     unsigned char request[BUF_SIZE];
     unsigned char recv[BUF_SIZE];
@@ -76,11 +76,11 @@ int main(int argc, char const *argv[])
         }
         
         // TODO: parse dns request
-        parse_query_res = parse_query(recv, recv_len, queries, SIZEOF_ARR(queries));
+        parse_query_res = parse_query(recv, recv_len, &dnsquery);
         if (parse_query_res == 0)
         {
             // printf("%s", name);
-            printf("success to parse query info {name: %s, type: %d, class: %d}\n", queries[0].name, queries[0].qtype, queries[0].qclass);
+            printf("success to parse query info {name: %s, type: %d, class: %d}\n", dnsquery.name, dnsquery.qtype, dnsquery.qclass);
         }
         else
         {

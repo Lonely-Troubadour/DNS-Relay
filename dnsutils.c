@@ -96,96 +96,156 @@ int gen_dns_rt(unsigned char *rt, int *rt_len, char *name) {
 }
 
 /**
- * Parse the received DNS rt.
+ * Generates DNS request
+ * Request contains header, queries, 
+ * type and class sections.
+ * --------------------------------
+ * Parameters:
+ *     request: pointer to the request.
+ *     name: constant char pointer. Points to the name string.
+ * Returns:
+ *     0 if success. 1 if failed.
+ */
+int gen_dns_request(unsigned char *request, int *request_len, char *name)
+{
+    int pos = 0;
+    int len = 0;
+    char *token;
+    uint16_t q_type = htons(TYPE_A);
+    uint16_t q_class = htons(CLASS_IN);
+
+    /* Generates DNS header, copy the header to request header field */
+    struct header *dns_header = gen_header();
+    memcpy(request, dns_header, sizeof(struct header));
+    pos += sizeof(struct header);
+
+    /* Generate DNS query section */
+    token = strtok(name, ".");
+    while (token != NULL)
+    {
+        len = strlen(token);
+        if ((pos + len + 1) > BUF_SIZE)
+            return 1;
+        request[pos++] = len;
+        memcpy(request + pos, token, len);
+        pos += len;
+        token = strtok(NULL, ".");
+    }
+    if ((pos + 1) > BUF_SIZE)
+        return 1;
+    request[pos++] = '\0';
+
+    /* Generate Type section */
+    if ((pos + sizeof(q_type)) > BUF_SIZE)
+        return 1;
+    memcpy(request + pos, &q_type, sizeof(q_type));
+    pos += sizeof(q_type);
+
+    /* Generate Class section */
+    if ((pos + sizeof(q_class)) > BUF_SIZE)
+        return 1;
+    memcpy(request + pos, &q_class, sizeof(q_class));
+    pos += sizeof(q_class);
+
+    /* Update request length */
+    *request_len = pos;
+
+    return 0;
+}
+
+/**
+ * Parse dns name form received buffer.
  * ------------------------------
  * Parameters:
- *     msg: The DNS rt message.
- *     msg_size: Size of the message.
- *     queries: The queries to parse for.
- *     queries_len: The length of queries.
+ *     dns: The DNS buffer.
+ *     offset: Offset to current query filed.
+ *     domain: Query domain name.
+ *     domain_len: Length of domain.
  * Returns:
  *     0 if success.
  */
-int parse_query(unsigned char *msg, int msg_size, struct query *queries, \ 
-int queries_len) {
+int dns_parse_domain(unsigned char *dns, int offset, unsigned char *domain, int *domain_len);
+
+/**
+ * Parse the received DNS request.
+ * ------------------------------
+ * Parameters:
+ *     msg: The DNS request message.
+ *     msg_size: Size of the message.
+ *     dnsquery: The queries to parse for.
+ * Returns:
+ *     0 if success.
+ */
+int parse_query(unsigned char *msg, int msg_size, struct query *dnsquery)
+{
     /* Skip the header, starts from the end of the header */
-    int offset = sizeof(struct header);
+    int header_len = sizeof(struct header);
     int parse_res = 0;
-    int left = msg_size - offset;
     int step = 0;
+    int domain_step = 0;
+    int parse_domain_res;
 
-    /* Assume we only process one query, not multiple quries. */
-    for (int i = 0; i < queries_len; i++)
+    // if message is shorter than header length, return failed
+    if (msg_size < header_len)
     {
-        if (left < 0) 
-            return 1;
-
-        parse_res = parse_one_query(msg, left, offset, &queries[i], &step);
-        if (parse_res != 0) 
-            return parse_res;
-
-        left -= step;
-        offset += step;
+        return 1;
     }
 
-    return 0;
-}
-
-int parse_one_query(unsigned char *dns, int left, int offset, \ 
-struct query *queries, int *step) {
-    int domain_step = 0;
-    int parse_domain_res = 0;
-
-    parse_domain_res = parse_domain(dns, offset, queries[0].name, &domain_step);
+    // query domain name
+    parse_domain_res = dns_parse_domain(msg, header_len, dnsquery->name, &domain_step);
     if (parse_domain_res != 0)
+    {
         return parse_domain_res;
-    
-    if (left < (offset + domain_step + 4))
+    }
+
+    // if no buffer data for query type(short) and query class(short), return failed
+    if (msg_size < (header_len + domain_step + 4))
+    {
         return 2;
+    }
 
-    queries[0].qtype = * (uint16_t *) (dns + offset + domain_step);
-    queries[0].qtype = ntohs(queries[0].qtype);
+    (*dnsquery).qtype = *(unsigned short *)(msg + header_len + domain_step);
+    (*dnsquery).qtype = ntohs((*dnsquery).qtype);
 
-    queries[0].qclass = * (uint16_t *) (dns + offset + domain_step + 2);
-    queries[0].qclass = ntohs(queries[0].qclass);
-
-    *step = domain_step + 4;
+    (*dnsquery).qclass = *(unsigned short *)(msg + header_len + domain_step + 2);
+    (*dnsquery).qclass = ntohs((*dnsquery).qclass);
 
     return 0;
 }
 
-int parse_domain(unsigned char *dns, int offset, unsigned char *domain, \ 
-int *domain_step) {
-    unsigned char val, *pval;
-    unsigned short len;
+
+int dns_parse_domain(unsigned char *dns, int offset, unsigned char *domain, int *domain_step)
+{
+    // temporary buffer value
+    unsigned char val;
+    // length for pure domain filed
     int tmp_domain_len;
 
     tmp_domain_len = 0;
-    while (1) {
-        pval = (unsigned char *)(dns + offset);
-        val = *pval;
-
-        if (val == 0) {
+    // loop until '\0' occured
+    while (1)
+    {
+        val = *(unsigned char *)(dns + offset);
+        // if '\0', break loop
+        if (val == 0)
+        {
             domain[tmp_domain_len - 1] = 0;
             tmp_domain_len--;
             break;
-        } else if (val <= 63) {
+        }
+        else
+        {
+            // if not '\0', copy specified count chars
             memcpy(domain + tmp_domain_len, dns + offset + 1, val);
             tmp_domain_len += val;
             domain[tmp_domain_len] = '.';
             tmp_domain_len++;
 
             offset += (val + 1);
-        } else {
-            // len = *(unsigned short *)(dns + offset);
-            // len = ntohs(len);
-            // len = len & (~0xc000);
-            // offset = len;
-            offset = (int) * (dns + offset);
         }
     }
 
-    // first count + domain + '\0'
+    // first count char + domain + '\0'
     *domain_step = 1 + tmp_domain_len + 1;
     return 0;
 }

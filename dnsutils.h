@@ -32,7 +32,6 @@
 
 #define SIZEOF_ARR(arr) (sizeof(arr)/sizeof(arr[0]))
 
-#define MAX_QUERIES 4
 #define MAX_LENGTH 255
 #define BUF_SIZE 512
 #define TYPE_A 1
@@ -92,7 +91,6 @@ struct ip_addr {
 uint16_t gen_id();
 struct header * gen_header();
 int gen_dns_request(unsigned char *request, int *request_len, char *name);
-int parse_query(unsigned char *msg, int msg_size, struct query *queries, int queries_len);
-int parse_domain(unsigned char *dns, int offset, unsigned char *domain, int *domain_len);
-int parse_one_query(unsigned char *dns, int left, int offset, struct query *queries, int *query_len);
+int parse_query(unsigned char *msg, int msg_size, struct query *dnsquery);
+
 #endif
