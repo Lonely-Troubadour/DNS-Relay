@@ -22,9 +22,6 @@ int lookup (char *target_name, char *db, char *target_addr) {
     int flag = 0;
     size_t len;
 
-    /* Initialize */
-    memset(target_addr, 0, sizeof(MAX_LENGTH));
-
     /* Open local database */
     if (db == NULL) {
         db = (char *) malloc(MAX_LENGTH);
@@ -44,6 +41,8 @@ int lookup (char *target_name, char *db, char *target_addr) {
 
         /* Remove '\n' char in the end of the string */
         name[strlen(name)-1] = '\0';
+
+        // printf("%s %s %s\n", name, ip_addr, target_name);
 
         if (strcmp(name, target_name) == 0) {
             strcpy(target_addr, ip_addr);

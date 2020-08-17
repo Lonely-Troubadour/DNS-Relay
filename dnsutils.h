@@ -27,6 +27,7 @@
 #include <winsock.h>
 #include <stdint.h>
 #else
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #endif
 
@@ -73,7 +74,7 @@ struct header {
  */
 struct query
 {
-    unsigned char name[MAX_LENGTH];
+    char name[MAX_LENGTH];
     uint16_t qtype;
     uint16_t qclass;
 };
@@ -92,5 +93,9 @@ uint16_t gen_id();
 struct header * gen_header();
 int gen_dns_request(unsigned char *request, int *request_len, char *name);
 int parse_query(unsigned char *msg, int msg_size, struct query *dnsquery);
-
+int dns_parse_domain(unsigned char *dns, int offset, char *domain, \
+int *domain_len);
+int gen_response(unsigned char *response, unsigned char *request, \
+int request_size, char *ip_addr);
+int check_type(uint16_t qtype);
 #endif

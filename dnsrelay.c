@@ -11,13 +11,16 @@ int main(int argc, char const *argv[])
     struct query dnsquery;
     char name[MAX_LENGTH];
     unsigned char request[BUF_SIZE];
+    unsigned char response[BUF_SIZE];
     unsigned char recv[BUF_SIZE];
+    char ip_addr[MAX_LENGTH];
 
     struct sockaddr_in *dns_addr;
     struct sockaddr_in *server_addr;
     struct sockaddr_in client_addr;
 
     int request_len = 0;
+    int response_len = 0;
     int send_len = 0;
     int recv_len = 0;
     socklen_t dns_addr_size = 0;
@@ -25,6 +28,7 @@ int main(int argc, char const *argv[])
     socklen_t client_addr_size = sizeof(client_addr);
     int sock = 0;
     int parse_query_res = 0;
+    int op = 0;
     
     /* Initialize variables */
     memset(name, 0, MAX_LENGTH);
@@ -75,19 +79,73 @@ int main(int argc, char const *argv[])
             exit(1);
         }
         
-        // TODO: parse dns request
         parse_query_res = parse_query(recv, recv_len, &dnsquery);
-        if (parse_query_res == 0)
-        {
-            // printf("%s", name);
-            printf("success to parse query info {name: %s, type: %d, class: %d}\n", dnsquery.name, dnsquery.qtype, dnsquery.qclass);
-        }
-        else
-        {
-            printf("failed to parse query info, return %d\n", parse_query_res);
+        if (parse_query_res != 0) {
+            perror("ERROR: parse query failed.");
+            exit(1);
         }
 
-        break;
+        memset(request, 0, BUF_SIZE);
+        memcpy(request, recv, recv_len);
+        request_len = recv_len;
+
+        if (check_type(dnsquery.qtype) == 0) 
+            if (lookup(dnsquery.name, NULL, ip_addr) == 0)
+                op = 1;
+
+        switch(op) {
+            case 0:
+                 /* Send DNS request to dns server*/   
+                send_len = sendto(sock, request, request_len, 0, \
+                (struct sockaddr*)dns_addr, dns_addr_size);
+                if (send_len < 0) {
+                    perror("ERROR: Send DNS request failed.\n");
+                    exit(1);
+                }
+                printf("Send success, packet length: \n");
+                printf("%d\n", send_len);
+
+                /* Receive response from dns server*/
+                memset(recv, 0, BUF_SIZE);
+                recv_len = recvfrom(sock, recv, sizeof(recv), 0, \
+                (struct sockaddr*)dns_addr, &dns_addr_size);
+                if (recv_len < 0) {
+                    perror("ERROR: receive packet failed.\n");
+                    exit(1);
+                }
+                printf("Receive success, packet length: \n");
+                printf("%d\n", recv_len);
+                
+                /* Send response back to client*/
+                memset(response, 0, BUF_SIZE);
+                memcpy(response, recv, recv_len);
+                response_len = recv_len;
+
+                send_len = sendto(sock, response, response_len, 0, \
+                (struct sockaddr*)&client_addr, client_addr_size);
+                if (send_len < 0) {
+                    perror("ERROR: Send DNS request failed.\n");
+                    exit(1);
+                }
+                printf("Send back success, packet length: \n");
+                printf("%d\n", send_len);
+                break;
+            case 1:
+                memset(response, 0, BUF_SIZE);
+                response_len = gen_response(response, request, request_len, ip_addr);
+                send_len = sendto(sock, response, response_len, 0, \
+                (struct sockaddr*)&client_addr, client_addr_size);
+                if (send_len < 0) {
+                    perror("ERROR: Send DNS request failed.\n");
+                    exit(1);
+                }
+                printf("Send back success, packet length: \n");
+                printf("%d\n", send_len);
+                break;
+            default:
+                printf("Wrong query, try again!\n");
+                break;
+        }
     }
 
     /* Send DNS request */
