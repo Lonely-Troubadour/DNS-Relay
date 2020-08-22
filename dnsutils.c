@@ -165,7 +165,7 @@ int *domain_step)
     int tmp_domain_len;
 
     tmp_domain_len = 0;
-    // loop until '\0' occured
+    // loop until '\0' occurred
     while (1) {
         val = *(unsigned char *)(dns + offset);
         // if '\0', break loop

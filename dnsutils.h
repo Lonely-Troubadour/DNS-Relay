@@ -79,6 +79,7 @@ struct query
     uint16_t qclass;
 };
 
+/*
 union address {
     struct in_addr ipv4;
     struct in6_addr ipv6;
@@ -88,6 +89,7 @@ struct ip_addr {
     int type;
     union address addr;
 };
+*/
 
 uint16_t gen_id();
 struct header * gen_header();

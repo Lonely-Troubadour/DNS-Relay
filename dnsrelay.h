@@ -21,6 +21,8 @@
 #if defined(_WIN32) || defined(_WIN64)
 #include <winsock2.h>
 typedef int socklen_t;
+#define close closesocket
+#pragma comment (lib, "ws2_32.lib")
 #else
 #include <arpa/inet.h>
 #include <sys/socket.h>

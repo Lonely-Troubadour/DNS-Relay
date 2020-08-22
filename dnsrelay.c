@@ -37,6 +37,16 @@ int main(int argc, char const *argv[])
     dns_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
     server_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
 
+    #if defined(_WIN32) || defined(_WIN64)
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	{
+		printf("WSAStartup failed\n");
+		return -1;
+	}
+
+    #endif
+
     // if (argc < 2) {
     //     perror("Usage: dnsrelay data\n");
     //     exit(1);
