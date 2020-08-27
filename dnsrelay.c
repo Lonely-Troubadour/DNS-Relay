@@ -14,6 +14,7 @@ int main(int argc, char const *argv[])
     unsigned char response[BUF_SIZE];
     unsigned char recv[BUF_SIZE];
     char ip_addr[MAX_LENGTH];
+    char *db;
 
     struct sockaddr_in *dns_addr;
     struct sockaddr_in *server_addr;
@@ -34,9 +35,11 @@ int main(int argc, char const *argv[])
     memset(name, 0, MAX_LENGTH);
     memset(request, 0, BUF_SIZE);
     memset(recv, 0, BUF_SIZE);
+    db = NULL;
     dns_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
     server_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
 
+    /* Windows initialization */
     #if defined(_WIN32) || defined(_WIN64)
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
@@ -44,7 +47,6 @@ int main(int argc, char const *argv[])
 		printf("WSAStartup failed\n");
 		return -1;
 	}
-
     #endif
 
     // if (argc < 2) {
@@ -53,11 +55,14 @@ int main(int argc, char const *argv[])
     // }
 
     // strcpy(name, argv[1]);
-    // strcpy(name, "www.bupt.edu.cn");
     // if (gen_dns_request(request, &request_len, name)) {
     //     perror("ERROR: Generate DNS request failed.\n");
     //     exit(1);
     // }
+    if (argc = 2) {
+        db = (char *) malloc(sizeof(char) * MAX_LENGTH);
+        strcpy(db, argv[1]);
+    }
 
     /* Create socket */
     sock = init_socket();
@@ -100,7 +105,7 @@ int main(int argc, char const *argv[])
         request_len = recv_len;
 
         if (check_type(dnsquery.qtype) == 0) 
-            if (lookup(dnsquery.name, NULL, ip_addr) == 0)
+            if (lookup(dnsquery.name, db, ip_addr) == 0)
                 op = 1;
 
         switch(op) {
@@ -157,44 +162,6 @@ int main(int argc, char const *argv[])
                 break;
         }
     }
-
-    /* Send DNS request */
-    memcpy(request, recv, recv_len);
-    request_len = recv_len;
-
-    send_len = sendto(sock, request, request_len, 0, \
-    (struct sockaddr*)dns_addr, dns_addr_size);
-    if (send_len < 0) {
-        perror("ERROR: Send DNS request failed.\n");
-        exit(1);
-    }
-    printf("Send success, packet length: \n");
-    printf("%d\n", send_len);
-
-    /* Receive response */
-    memset(recv, 0, BUF_SIZE);
-    recv_len = recvfrom(sock, recv, sizeof(recv), 0, \
-    (struct sockaddr*)dns_addr, &dns_addr_size);
-    if (recv_len < 0) {
-        perror("ERROR: receive packet failed.\n");
-        exit(1);
-    }
-    printf("Receive success, packet length: \n");
-    printf("%d\n", recv_len);
-    
-
-    /* Send back */
-    memcpy(request, recv, recv_len);
-    request_len = recv_len;
-
-    send_len = sendto(sock, request, request_len, 0, \
-    (struct sockaddr*)&client_addr, client_addr_size);
-    if (send_len < 0) {
-        perror("ERROR: Send DNS request failed.\n");
-        exit(1);
-    }
-    printf("Send back success, packet length: \n");
-    printf("%d\n", send_len);
 
     /* Close socket and clean up memory */
     close(sock);
