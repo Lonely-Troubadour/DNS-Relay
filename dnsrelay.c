@@ -9,17 +9,24 @@
 int main(int argc, char const *argv[])
 {
     struct query dnsquery;
-    char name[MAX_LENGTH];
+
+    /* Buffers */
     unsigned char request[BUF_SIZE];
     unsigned char response[BUF_SIZE];
     unsigned char recv[BUF_SIZE];
-    char ip_addr[MAX_LENGTH];
-    char *db;
+    
+    /* Exec options */
+    char *db = NULL;
+    char *dns_server = NULL;
+    int debug = 0;
 
-    struct sockaddr_in *dns_addr;
-    struct sockaddr_in *server_addr;
+    /* Socket address */
+    struct sockaddr_in *dns_addr = NULL;
+    struct sockaddr_in *server_addr = NULL;
     struct sockaddr_in client_addr;
 
+    /* Socket relevant vars */
+    char ip_addr[MAX_LENGTH];
     int request_len = 0;
     int response_len = 0;
     int send_len = 0;
@@ -28,16 +35,18 @@ int main(int argc, char const *argv[])
     socklen_t server_addr_size = 0;
     socklen_t client_addr_size = sizeof(client_addr);
     int sock = 0;
-    int parse_query_res = 0;
     int op = 0;
     
     /* Initialize variables */
-    memset(name, 0, MAX_LENGTH);
     memset(request, 0, BUF_SIZE);
     memset(recv, 0, BUF_SIZE);
-    db = NULL;
-    dns_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+    memset(response, 0, BUF_SIZE);
+    dns_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in)); 
     server_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+    if (!dns_addr || !server_addr) {
+        perror("Initialize DNS address failed.");
+        exit(1);
+    }
 
     /* Windows initialization */
     #if defined(_WIN32) || defined(_WIN64)
@@ -49,33 +58,22 @@ int main(int argc, char const *argv[])
 	}
     #endif
 
-    // if (argc < 2) {
-    //     perror("Usage: dnsrelay data\n");
-    //     exit(1);
-    // }
-
-    // strcpy(name, argv[1]);
-    // if (gen_dns_request(request, &request_len, name)) {
-    //     perror("ERROR: Generate DNS request failed.\n");
-    //     exit(1);
-    // }
-    if (argc = 2) {
-        db = (char *) malloc(sizeof(char) * MAX_LENGTH);
-        strcpy(db, argv[1]);
-    }
+    /* Parse exec options */
+    parse_opt(argc, argv, &debug, &dns_server, &db);
 
     /* Create socket */
     sock = init_socket();
 
     /* Generate DNS server address and local server address */
-    if (gen_in_addr(dns_addr, &dns_addr_size, server_addr, &server_addr_size)) {
+    if (gen_in_addr(dns_addr, &dns_addr_size, server_addr, &server_addr_size, \
+    dns_server)) {
         perror("ERROR: Generate addresses failed.\n");
         exit(1);
     }
 
     /* Bind server socket for listening */
     if (bind(sock, (struct sockaddr*)server_addr, server_addr_size) < 0) {
-        perror("ERROR: bind failed.\n");
+        perror("ERROR: bind failed.");
         exit(1);
     }
     
@@ -94,8 +92,8 @@ int main(int argc, char const *argv[])
             exit(1);
         }
         
-        parse_query_res = parse_query(recv, recv_len, &dnsquery);
-        if (parse_query_res != 0) {
+        /* Parse received DNS query */ 
+        if (parse_query(recv, recv_len, &dnsquery)) {
             perror("ERROR: parse query failed.");
             exit(1);
         }
@@ -104,8 +102,9 @@ int main(int argc, char const *argv[])
         memcpy(request, recv, recv_len);
         request_len = recv_len;
 
+        /* Check query type */
         if (check_type(dnsquery.qtype) == 0) 
-            if (lookup(dnsquery.name, db, ip_addr) == 0)
+            if (lookup(dnsquery.name, &db, ip_addr) == 0)
                 op = 1;
 
         switch(op) {
@@ -167,6 +166,8 @@ int main(int argc, char const *argv[])
     close(sock);
     if (dns_addr) free(dns_addr);
     if (server_addr) free(server_addr);
+    if (dns_server) free(dns_server);
+    if (db) free(db);
 
     return 0;
 }
@@ -175,7 +176,7 @@ int main(int argc, char const *argv[])
  * Creates a socket.
  * This methods initialize a socket.
  * ----------------------------------
- * Arguments: None.
+ * Parameters: None.
  * Returns: Socket Id. 
  */
 int init_socket() {
@@ -196,22 +197,28 @@ int init_socket() {
 
 /**
  * Generates inet ipv4 address
- * Socket address that request sends to
+ * Socket address that request sends to and current server addr.
  * ------------------------------------
  * Parameters:
- *     addr: Pointer to socket in address struct.
+ *     dns_addr: pointer to socket in address struct.
+ *     dns_addr_size: size of sock addr.
+ *     server_ader: pointer to current server addr.
+ *     server_addr_size: size of sock addr.
  * Returns:
- *     Size of the address.
+ *     0 if success.
  */
 int gen_in_addr(struct sockaddr_in *dns_addr, unsigned int *dns_addr_size, \
-struct sockaddr_in * server_addr, unsigned int *server_addr_size) {
+struct sockaddr_in *server_addr, unsigned int *server_addr_size, \
+char *dns_server) {
     // For differences between sockaddr_in and sockaddr, goto:
     // https://stackoverflow.com/questions/21099041/
     // why-do-we-cast-sockaddr-in-to-sockaddr-when-calling-bind
     
+    if (dns_server == NULL) dns_server = DNS_SERVER;
+
     memset(dns_addr, 0, sizeof(struct sockaddr_in));
     (*dns_addr).sin_family = AF_INET;
-    (*dns_addr).sin_addr.s_addr = inet_addr(DNS_SERVER);
+    (*dns_addr).sin_addr.s_addr = inet_addr(dns_server);
     (*dns_addr).sin_port = htons(PORT);
     *dns_addr_size = sizeof(*dns_addr);
 
@@ -223,4 +230,59 @@ struct sockaddr_in * server_addr, unsigned int *server_addr_size) {
     *server_addr_size = sizeof(*server_addr);
 
     return 0;
+}
+
+/** Parse the exec options.
+ * --------------------------
+ * Parameters:
+ *     argc: arg numbers.
+ *     argv: arguments
+ *     debug: debug opt.
+ *     dns_server: dns server address.
+ *     db: database path.
+ * Returns:
+ *     0 if success.
+ */
+int parse_opt(int argc, char **argv, int *debug, char **dns_server, char **db) {
+    char *token;
+    int i = 1;
+    while (i < argc) {
+        if (!strcmp(argv[i], "-d")) *debug = 1;
+        else if (!strcmp(argv[i], "-dd")) *debug = 2;
+        else if (!strcmp(argv[i], "-s")) {
+            i++;
+            *dns_server = (char *) malloc(sizeof(char) * MAX_LENGTH);
+            if (*dns_server == NULL) {
+                fprintf(stderr, "ERROR: DNS server addr initilization failed.");
+                exit(1);
+            }
+            strcpy(*dns_server, argv[i]);
+        } else if (!strcmp(argv[i], "-p")) {
+            i++;
+            *db = (char *) malloc(sizeof(char) * MAX_LENGTH);
+            if (*db == NULL) {
+                fprintf(stderr, "ERROR: database path initilization failed.");
+                exit(1);
+            }
+            strcpy(*db, argv[i]);
+        } else {
+            fprintf(stderr, "ERROR: Unrecognized opt %s\n", argv[i]);
+            usage();
+            exit(1);
+        }
+        i++;
+    }
+
+    return 0;
+}
+
+/** Pirnt usage info */
+void usage() {
+    printf("---------helper---------\n");
+    printf("dns relay 1.0\n");
+    printf("Usage: [commands] [options]\n");
+    printf("Commands:\n");
+    printf("\t[-d|-dd], debug mode\n");
+    printf("\t-s [dns_server_addres]\n");
+    printf("\t-p [path_to_db_file]\n");
 }

@@ -72,7 +72,7 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream) {
  * Returns:
  *     1 if not fount, 0 if found.
  */
-int lookup (char *target_name, char *db, char *target_addr) {
+int lookup (char *target_name, char **db, char *target_addr) {
     FILE *fp = NULL;
     char *buf = NULL;
     char *ip_addr = NULL;
@@ -80,15 +80,17 @@ int lookup (char *target_name, char *db, char *target_addr) {
     int flag = 0;
     size_t len;
 
-    /* Open local database */
-    if (db == NULL) {
-        db = (char *) malloc(MAX_LENGTH);
-        strcpy(db, "./data/dnsrelay.txt");
+    /* Check database file path */
+    if (*db == NULL) {
+        *db = (char *) malloc(MAX_LENGTH);
+        strcpy(*db, "./data/dnsrelay.txt");
+        printf("--%s--\n", *db);
     }
 
-    fp = fopen(db, "r");
+    /* Open local database */
+    fp = fopen(*db, "r");
     if (fp == NULL) {
-        perror("ERROR: Load local database failed.");
+        perror("ERROR: Load local database failed");
         exit(1);
     }
     
@@ -100,8 +102,6 @@ int lookup (char *target_name, char *db, char *target_addr) {
         /* Remove '\n' char in the end of the string */
         name[strlen(name)-1] = '\0';
 
-        // printf("%s %s %s\n", name, ip_addr, target_name);
-
         if (strcmp(name, target_name) == 0) {
             strcpy(target_addr, ip_addr);
             flag = 1;
@@ -111,7 +111,6 @@ int lookup (char *target_name, char *db, char *target_addr) {
 
     /* Close file and clean up memory */
     if (buf) free(buf);
-    if (db) free(db);
     fclose(fp);
 
     if (flag) 

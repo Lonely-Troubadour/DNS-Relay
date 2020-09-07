@@ -20,4 +20,4 @@
 #include "dnsutils.h"
 
 #endif
-int lookup (char *target_name, char *db, char *target_addr);
+int lookup (char *target_name, char **db, char *target_addr);
