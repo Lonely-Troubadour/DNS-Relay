@@ -97,6 +97,9 @@ int main(int argc, char const *argv[])
             perror("ERROR: parse query failed.");
             exit(1);
         }
+        printf(
+            "Parse query sucess, {name: \"%s\", type: %d, class: %d}\n",
+            dnsquery.name, dnsquery.qtype, dnsquery.qclass);
 
         memset(request, 0, BUF_SIZE);
         memcpy(request, recv, recv_len);
