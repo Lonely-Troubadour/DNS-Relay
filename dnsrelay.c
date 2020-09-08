@@ -91,6 +91,15 @@ int main(int argc, char const *argv[])
             perror("ERROR: Receive failed.");
             exit(1);
         }
+        if (debug == 2)
+        {
+            print_send_recv("RECV from", &client_addr, recv, recv_len);
+        }
+
+        if (debug == 2 && recv_len > sizeof(struct header))
+        {
+            print_buf_header(recv);
+        }
         
         /* Parse received DNS query */ 
         if (parse_query(recv, recv_len, &dnsquery)) {
@@ -122,6 +131,11 @@ int main(int argc, char const *argv[])
                 printf("Send success, packet length: \n");
                 printf("%d\n", send_len);
 
+                if (debug == 2)
+                {
+                    print_send_recv("Send to", dns_addr, request, send_len);
+                }
+
                 /* Receive response from dns server*/
                 memset(recv, 0, BUF_SIZE);
                 recv_len = recvfrom(sock, recv, sizeof(recv), 0, \
@@ -132,7 +146,12 @@ int main(int argc, char const *argv[])
                 }
                 printf("Receive success, packet length: \n");
                 printf("%d\n", recv_len);
-                
+
+                if (debug == 2)
+                {
+                    print_send_recv("RECV from", dns_addr, recv, recv_len);
+                }
+
                 /* Send response back to client*/
                 memset(response, 0, BUF_SIZE);
                 memcpy(response, recv, recv_len);
@@ -146,6 +165,12 @@ int main(int argc, char const *argv[])
                 }
                 printf("Send back success, packet length: \n");
                 printf("%d\n", send_len);
+
+                if (debug == 2)
+                {
+                    print_send_recv("Send to", &client_addr, response, send_len);
+                }
+
                 break;
             case 1:
                 memset(response, 0, BUF_SIZE);
@@ -158,6 +183,12 @@ int main(int argc, char const *argv[])
                 }
                 printf("Send back success, packet length: \n");
                 printf("%d\n", send_len);
+
+                if (debug == 2)
+                {
+                    print_send_recv("Send to", &client_addr, response, send_len);
+                }
+
                 break;
             default:
                 printf("Wrong query, try again!\n");
@@ -288,4 +319,25 @@ void usage() {
     printf("\t[-d|-dd], debug mode\n");
     printf("\t-s [dns_server_addres]\n");
     printf("\t-p [path_to_db_file]\n");
+}
+
+void print_send_recv(char *send_recv, struct sockaddr_in *addr, char *buf, int buf_len)
+{
+    int port = ntohs(addr->sin_port);
+    char* ip = NULL;
+#ifdef __MINGW32__  //windows上打印方式
+    ip = inet_ntoa(addr->sin_addr);
+#else //linux上打印方式
+    struct in_addr in = addr->sin_addr;
+    char ip_str[INET_ADDRSTRLEN]; //INET_ADDRSTRLEN这个宏系统默认定义 16
+    //成功的话此时IP地址保存在str字符串中。
+    inet_ntop(AF_INET, &in, ip_str, sizeof(ip_str));
+    ip = ip_str;
+#endif
+    printf("%s %s:%d  (%d bytes) ", send_recv, ip, port);
+    for (int i=0; i<buf_len; ++i)
+    {
+        printf(" %x", buf[i]);
+    }
+    printf("\n");
 }

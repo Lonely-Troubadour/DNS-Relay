@@ -41,4 +41,6 @@ int gen_in6_addr();
 int parse_opt(int argc, char **argv, int *debug, char **dns_server, char **db);
 void usage();
 
+void print_send_recv(char *send_recv, struct sockaddr_in *addr, char *buf, int buf_len);
+
 #endif
