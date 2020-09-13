@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,6 +10,7 @@
 int main(int argc, char const *argv[])
 {
     struct query dnsquery;
+    int parse_count = 0;
 
     /* Buffers */
     unsigned char request[BUF_SIZE];
@@ -36,7 +38,10 @@ int main(int argc, char const *argv[])
     socklen_t client_addr_size = sizeof(client_addr);
     int sock = 0;
     int op = 0;
-    
+
+    time_t tm_now = time(0);
+    char tm_str[64];
+
     /* Initialize variables */
     memset(request, 0, BUF_SIZE);
     memset(recv, 0, BUF_SIZE);
@@ -96,9 +101,12 @@ int main(int argc, char const *argv[])
             print_send_recv("RECV from", &client_addr, recv, recv_len);
         }
 
-        if (debug == 2 && recv_len > sizeof(struct header))
+        if (recv_len > sizeof(struct header))
         {
-            print_buf_header(recv);
+            if (debug == 2)
+            {
+                print_buf_header(recv);
+            }
         }
         
         /* Parse received DNS query */ 
@@ -106,9 +114,32 @@ int main(int argc, char const *argv[])
             perror("ERROR: parse query failed.");
             exit(1);
         }
-        printf(
-            "Parse query sucess, {name: \"%s\", type: %d, class: %d}\n",
-            dnsquery.name, dnsquery.qtype, dnsquery.qclass);
+
+        parse_count += 1;
+        if (debug == 1)
+        {
+            char *ip = NULL;
+#ifdef __MINGW32__ //windows上打印方式
+            ip = inet_ntoa(client_addr.sin_addr);
+#else //linux上打印方式
+            struct in_addr in = client_addr.sin_addr;
+            char ip_str[INET_ADDRSTRLEN]; //INET_ADDRSTRLEN这个宏系统默认定义 16
+            //成功的话此时IP地址保存在str字符串中。
+            inet_ntop(AF_INET, &in, ip_str, sizeof(ip_str));
+            ip = ip_str;
+#endif
+            tm_now = time(0);
+            strftime(tm_str, sizeof(tm_str), "%Y-%m-%d %H:%M:%S", localtime(&tm_now));
+            printf(
+                "  %d:  %s  Client %s\t%s, TYPE %d, CLASS %d\n",
+                parse_count, tm_str, ip, dnsquery.name, dnsquery.qtype, dnsquery.qclass);
+        }
+        else if (debug == 2)
+        {
+            printf(
+                "Parse query sucess, {name: \"%s\", type: %d, class: %d}\n",
+                dnsquery.name, dnsquery.qtype, dnsquery.qclass);
+        }
 
         memset(request, 0, BUF_SIZE);
         memcpy(request, recv, recv_len);
