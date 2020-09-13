@@ -321,7 +321,7 @@ void usage() {
     printf("\t-p [path_to_db_file]\n");
 }
 
-void print_send_recv(char *send_recv, struct sockaddr_in *addr, char *buf, int buf_len)
+void print_send_recv(char *send_recv, struct sockaddr_in *addr, unsigned char *buf, int buf_len)
 {
     int port = ntohs(addr->sin_port);
     char* ip = NULL;
