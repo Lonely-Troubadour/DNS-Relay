@@ -1,5 +1,4 @@
-#include "dnsrelay.h"
-#include "dnsutils.h"
+#include "utils.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,8 +17,16 @@ void usage() {
     printf("-------------------------------------------------------\n");
 }
 
+void print_debug() {
+
+}
+
 void print_dns_server() {
 
+}
+
+void print_db_path() {
+    
 }
 
 /** Parse the exec options.
