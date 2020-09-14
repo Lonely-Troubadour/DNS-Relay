@@ -308,7 +308,7 @@ char *dns_server) {
  * Returns:
  *     0 if success.
  */
-int parse_opt(int argc, char **argv, int *debug, char **dns_server, char **db) {
+int parse_opt(int argc, const char **argv, int *debug, char **dns_server, char **db) {
     char *token;
     int i = 1;
     while (i < argc) {

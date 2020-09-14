@@ -38,7 +38,7 @@ int gen_in_addr(struct sockaddr_in *dns_addr, unsigned int *dns_addr_len, \
 struct sockaddr_in * server_addr, unsigned int *server_addr_size, \
 char *dns_server);
 int gen_in6_addr();
-int parse_opt(int argc, char **argv, int *debug, char **dns_server, char **db);
+int parse_opt(int argc, const char **argv, int *debug, char **dns_server, char **db);
 void usage();
 
 void print_send_recv(char *send_recv, struct sockaddr_in *addr, unsigned char *buf, int buf_len);
