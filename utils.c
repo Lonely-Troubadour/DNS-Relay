@@ -27,8 +27,9 @@ void print_dns_server(char *DNS_server) {
         printf("Name server: %s\n", DNS_server);
 }
 
-void print_db_path() {
-
+void print_db_path(char *path) {
+    if (path)
+        printf("DB file path: \"%s\"\n", path);
 }
 
 void print_db() {

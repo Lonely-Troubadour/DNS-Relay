@@ -71,6 +71,7 @@ int main(int argc, char const *argv[])
     parse_opt(argc, argv, &debug, &dns_server, &db);
     print_debug(debug);
     print_dns_server(dns_server);
+    print_db_path(db);
 
     /* Create socket */
     sock = init_socket();

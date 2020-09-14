@@ -18,6 +18,7 @@
 #define _DBUTILS_H_
 
 #include "dnsutils.h"
+#include "utils.h"
 
 #endif
 int lookup (char *target_name, char **db, char *target_addr);
