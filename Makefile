@@ -11,8 +11,8 @@ endif
 CC:=gcc
 all: dnsrelay clean
 
-dnsrelay: main.o dnsutils.o dbutils.o
-	$(CC) -o dnsrelay main.o dnsutils.o dbutils.o $(LDFLAGS)
+dnsrelay: main.o dnsutils.o dbutils.o utils.o
+	$(CC) -o dnsrelay main.o dnsutils.o dbutils.o utils.o $(LDFLAGS)
 
 main.o: dnsrelay.c dnsrelay.h dnsutils.h dbutils.h 
 	$(CC) -o main.o -c dnsrelay.c $(LDFLAGS)
@@ -22,6 +22,9 @@ dnsutils.o: dnsutils.c dnsutils.h
 
 dbutils.o: dbutils.c dbutils.h
 	$(CC) -o dbutils.o -c dbutils.c
+
+utils.o: utils.c dnsrelay.h dnsutils.h
+	$(CC) -o utils.o -c utils.c
 
 .PHONY: clean
 ifeq ($(detected_os), Windows)
