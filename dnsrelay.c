@@ -39,7 +39,8 @@ int main(int argc, char const *argv[])
     socklen_t dns_addr_size = 0;
     socklen_t server_addr_size = 0;
     socklen_t client_addr_size = sizeof(client_addr);
-    int sock = 0;
+    int sock_recv = 0;
+    int sock_send = 0;
 
     time_t tm_now = time(0);
     char tm_str[64];
@@ -75,7 +76,9 @@ int main(int argc, char const *argv[])
     print_db_path(db);
 
     /* Create socket */
-    sock = init_socket();
+    if (init_socket(&sock_recv, &sock_send)) {
+        exit(1);
+    }
 
     /* Generate DNS server address and local server address */
     if (gen_in_addr(dns_addr, &dns_addr_size, server_addr, &server_addr_size, \
@@ -85,7 +88,7 @@ int main(int argc, char const *argv[])
     }
 
     /* Bind server socket for listening */
-    if (bind(sock, (struct sockaddr*)server_addr, server_addr_size) < 0) {
+    if (bind(sock_recv, (struct sockaddr*)server_addr, server_addr_size) < 0) {
         perror("ERROR: bind failed.");
         exit(1);
     }
@@ -97,7 +100,7 @@ int main(int argc, char const *argv[])
 
         printf("Listening...\n");
 
-        recv_len = recvfrom(sock, recv, BUF_SIZE, 0, \
+        recv_len = recvfrom(sock_recv, recv, BUF_SIZE, 0, \
         (struct sockaddr*)&client_addr, &client_addr_size);
         printf("Received request: %d\n", recv_len);
         if (recv_len == -1) {
@@ -161,7 +164,7 @@ int main(int argc, char const *argv[])
                 id++;
                 memcpy(request , &id, 2);
                  /* Send DNS request to dns server*/   
-                send_len = sendto(sock, request, request_len, 0, \
+                send_len = sendto(sock_send, request, request_len, 0, \
                 (struct sockaddr*)dns_addr, dns_addr_size);
                 if (send_len < 0) {
                     perror("ERROR: Send DNS request failed.\n");
@@ -176,7 +179,7 @@ int main(int argc, char const *argv[])
 
                 /* Receive response from dns server*/
                 memset(recv, 0, BUF_SIZE);
-                recv_len = recvfrom(sock, recv, sizeof(recv), 0, \
+                recv_len = recvfrom(sock_send, recv, sizeof(recv), 0, \
                 (struct sockaddr*)dns_addr, &dns_addr_size);
                 if (recv_len < 0) {
                     perror("ERROR: receive packet failed.\n");
@@ -197,7 +200,7 @@ int main(int argc, char const *argv[])
                 id--;
                 memcpy(response , &id, 2);
 
-                send_len = sendto(sock, response, response_len, 0, \
+                send_len = sendto(sock_recv, response, response_len, 0, \
                 (struct sockaddr*)&client_addr, client_addr_size);
                 if (send_len < 0) {
                     perror("ERROR: Send DNS request failed.\n");
@@ -214,7 +217,7 @@ int main(int argc, char const *argv[])
             case 1:
                 memset(response, 0, BUF_SIZE);
                 response_len = gen_response(response, request, request_len, ip_addr);
-                send_len = sendto(sock, response, response_len, 0, \
+                send_len = sendto(sock_recv, response, response_len, 0, \
                 (struct sockaddr*)&client_addr, client_addr_size);
                 if (send_len < 0) {
                     perror("ERROR: Send DNS request failed.\n");
@@ -236,7 +239,8 @@ int main(int argc, char const *argv[])
     }
 
     /* Close socket and clean up memory */
-    close(sock);
+    close(sock_recv);
+    close(sock_send);
     if (dns_addr) free(dns_addr);
     if (server_addr) free(server_addr);
     if (dns_server) free(dns_server);
@@ -252,20 +256,21 @@ int main(int argc, char const *argv[])
  * Parameters: None.
  * Returns: Socket Id. 
  */
-int init_socket() {
+int init_socket(int *sock_recv, int *sock_send) {
     /** 
      * Parameters specification:
      *     PF_INET: IPv4 protocols, Internet addresses.
      *     SOCK_DGRAM: UDP, connectionless, messages of max length.
      *     0: Default protocol.
      */
-    int sock_id = socket (AF_INET, SOCK_DGRAM, 0);
-    if (sock_id < 0) {
+    *sock_recv = socket (AF_INET, SOCK_DGRAM, 0);
+    *sock_send =  socket (AF_INET, SOCK_DGRAM, 0);
+    if (*sock_recv < 0 || *sock_send < 0) {
         perror("ERROR: Create socket failed.\n");
         exit(1);
     }
 
-    return sock_id;
+    return 0;
 }
 
 /**
@@ -297,7 +302,8 @@ char *dns_server) {
 
     memset(server_addr, 0, sizeof(struct sockaddr_in));
     (*server_addr).sin_family = AF_INET;
-    (*server_addr).sin_addr.s_addr = htonl(INADDR_ANY);
+    (*server_addr).sin_addr.s_addr = inet_addr(LOCAL_SERVER); 
+    // htonl(LOCALHOST);
     // inet_addr(LOCAL_SERVER); 
     (*server_addr).sin_port = htons(PORT);
     *server_addr_size = sizeof(*server_addr);

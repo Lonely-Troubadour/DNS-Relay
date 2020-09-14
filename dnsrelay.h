@@ -34,12 +34,10 @@ typedef int socklen_t;
 #define LOCAL_SERVER "127.0.0.1"
 #define DB "./data/dnsrelay.txt"
 
-int init_socket();
+int init_socket(int *sock_recv, int *sock_send);
 int gen_in_addr(struct sockaddr_in *dns_addr, unsigned int *dns_addr_len, \
 struct sockaddr_in * server_addr, unsigned int *server_addr_size, \
 char *dns_server);
 int gen_in6_addr();
 int parse_opt(int argc, const char **argv, int *debug, char **dns_server, char **db);
-void usage();
-
 #endif
