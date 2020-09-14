@@ -92,17 +92,21 @@ int main(int argc, char const *argv[])
         perror("ERROR: bind failed.");
         exit(1);
     }
+    printf("Bind port 53...OK\n");
+    printf("Running...\n-----------------\n");
     
     /* Keeps listening on port 53 */
     while(1) {
         memset(recv, 0, BUF_SIZE);
         client_addr_size = sizeof(client_addr);
+        op = 0;
 
-        printf("Listening...\n");
+        if (debug == 1 || debug == 2)
+            printf("Listening...\n");
 
         recv_len = recvfrom(sock_recv, recv, BUF_SIZE, 0, \
         (struct sockaddr*)&client_addr, &client_addr_size);
-        printf("Received request: %d\n", recv_len);
+        // printf("Received request: %d\n", recv_len);
         if (recv_len == -1) {
             perror("ERROR: Receive failed.");
             exit(1);
@@ -170,8 +174,7 @@ int main(int argc, char const *argv[])
                     perror("ERROR: Send DNS request failed.\n");
                     exit(1);
                 }
-                printf("Send success, packet length: \n");
-                printf("%d\n", send_len);
+                // printf("Send success, packet length: %d\n", send_len);
 
                 if (debug == 2) {
                     print_send_recv("Send to", dns_addr, request, send_len);
@@ -185,8 +188,7 @@ int main(int argc, char const *argv[])
                     perror("ERROR: receive packet failed.\n");
                     exit(1);
                 }
-                printf("Receive success, packet length: \n");
-                printf("%d\n", recv_len);
+                // printf("Receive success, packet length: %d\n", recv_len);
 
                 if (debug == 2) {
                     print_send_recv("RECV from", dns_addr, recv, recv_len);
@@ -206,8 +208,7 @@ int main(int argc, char const *argv[])
                     perror("ERROR: Send DNS request failed.\n");
                     exit(1);
                 }
-                printf("Send back success, packet length: \n");
-                printf("%d\n", send_len);
+                // printf("Send back success, packet length: %d\n", send_len);
 
                 if (debug == 2) {
                     print_send_recv("Send to", &client_addr, response, send_len);
@@ -223,11 +224,9 @@ int main(int argc, char const *argv[])
                     perror("ERROR: Send DNS request failed.\n");
                     exit(1);
                 }
-                printf("Send back success, packet length: \n");
-                printf("%d\n", send_len);
+                // printf("Send back success, packet length: %d\n", send_len);
 
-                if (debug == 2)
-                {
+                if (debug == 2) {
                     print_send_recv("Send to", &client_addr, response, send_len);
                 }
 
@@ -302,8 +301,8 @@ char *dns_server) {
 
     memset(server_addr, 0, sizeof(struct sockaddr_in));
     (*server_addr).sin_family = AF_INET;
-    (*server_addr).sin_addr.s_addr = inet_addr(LOCAL_SERVER); 
-    // htonl(LOCALHOST);
+    (*server_addr).sin_addr.s_addr = inet_addr(LOCAL_SERVER);; 
+    // htonl(INADDR_ANY);
     // inet_addr(LOCAL_SERVER); 
     (*server_addr).sin_port = htons(PORT);
     *server_addr_size = sizeof(*server_addr);
