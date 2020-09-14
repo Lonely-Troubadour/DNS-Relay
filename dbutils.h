@@ -22,3 +22,4 @@
 
 #endif
 int lookup (char *target_name, char **db, char *target_addr);
+void print_db(char *db);

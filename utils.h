@@ -6,9 +6,11 @@
 void print_debug(int debug);
 void print_dns_server(char *DNS_server);
 void print_db_path();
-void print_db();
 void print_send_recv(char *send_recv, struct sockaddr_in *addr, unsigned char *buf, int buf_len);
 void print_buf_header(const unsigned char *buf);
 void buf2header(const unsigned char *buf, struct header *header);
 void print_header(const struct header *header);
+#if defined(_WIN32) || defined(_WIN64)
+ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+#endif
 #endif

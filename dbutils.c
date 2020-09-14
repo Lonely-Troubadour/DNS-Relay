@@ -60,3 +60,7 @@ int lookup (char *target_name, char **db, char *target_addr) {
     else
         return 1;
 }
+
+void print_db(char *db) {
+    
+}

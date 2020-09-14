@@ -32,10 +32,6 @@ void print_db_path(char *path) {
         printf("DB file path: \"%s\"\n", path);
 }
 
-void print_db() {
-
-}
-
 /** Parse the exec options.
  * --------------------------
  * Parameters:
@@ -168,7 +164,6 @@ Srouce:
 
 https://stackoverflow.com/questions/735126/are-there-alternate-implementations-of-gnu-getline-interface/47229318#47229318
 */
-ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 ssize_t getline(char **lineptr, size_t *n, FILE *stream) {
     size_t pos;
     int c;
