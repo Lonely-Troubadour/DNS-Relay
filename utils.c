@@ -51,6 +51,11 @@ int parse_opt(int argc, const char **argv, int *debug, char **dns_server, char *
         else if (!strcmp(argv[i], "-dd")) *debug = 2;
         else if (!strcmp(argv[i], "-s")) {
             i++;
+            if (!argv[i]) {
+                fprintf(stderr, "ERROR: No specified option!\nPlease follow the usage below:\n");
+                usage();
+                exit(1);
+            }
             *dns_server = (char *) malloc(sizeof(char) * MAX_LENGTH);
             if (*dns_server == NULL) {
                 fprintf(stderr, "ERROR: DNS server addr initilization failed.");
@@ -59,6 +64,11 @@ int parse_opt(int argc, const char **argv, int *debug, char **dns_server, char *
             strcpy(*dns_server, argv[i]);
         } else if (!strcmp(argv[i], "-p")) {
             i++;
+            if (!argv[i]) {
+                fprintf(stderr, "ERROR: No specified option!\nPlease follow the usage below:\n");
+                usage();
+                exit(1);
+            }
             *db = (char *) malloc(sizeof(char) * MAX_LENGTH);
             if (*db == NULL) {
                 fprintf(stderr, "ERROR: database path initilization failed.");
@@ -66,7 +76,7 @@ int parse_opt(int argc, const char **argv, int *debug, char **dns_server, char *
             }
             strcpy(*db, argv[i]);
         } else {
-            fprintf(stderr, "ERROR: Unrecognized opt %s\n", argv[i]);
+            fprintf(stderr, "ERROR: Unrecognized opt %s\nPlease follow the usage below:\n", argv[i]);
             usage();
             exit(1);
         }
