@@ -43,40 +43,6 @@ struct header * gen_header() {
     return ptr_header;
 }
 
-void print_buf_header(const unsigned char *buf)
-{
-    struct header header;
-    buf2header(buf, &header);
-    print_header(&header);
-}
-
-void buf2header(const unsigned char *buf, struct header *header)
-{
-    memcpy(header, buf, sizeof(struct header));
-    header->id = ntohs(header->id);
-    header->qd_count = ntohs(header->qd_count);
-    header->an_count = ntohs(header->an_count);
-    header->ns_count = ntohs(header->ns_count);
-    header->ar_count = ntohs(header->ar_count);
-}
-
-void print_header(const struct header *header)
-{
-    struct {
-        uint8_t QR : 1;
-        uint8_t opcode : 4;
-        uint8_t AA : 1;
-        uint8_t TC : 1;
-        uint8_t RD : 1;
-        uint8_t RA : 1;
-        uint8_t zero : 3;
-        uint8_t rcode : 4; 
-    } flags;
-    memcpy(&flags, &header->flags, sizeof(flags));
-    printf("\tID %x%x, QR %d, OPCODE %d, AA %d, TC %d, RD %d, RA %d, Z: 0, RCODE: %d\n", header->id, flags.QR, flags.opcode, flags.AA, flags.TC, flags.RD, flags.RA, flags.rcode);
-    printf("\tQDCOUNT %d, ANCOUNT %d, NSCOUNT %d, ARCOUNT %d\n", header->qd_count, header->an_count, header->ns_count, header->ar_count);
-}
-
 /**
  * Generates DNS request
  * Request contains header, queries, 

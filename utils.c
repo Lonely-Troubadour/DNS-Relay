@@ -6,15 +6,21 @@
 
 /** Pirnt usage info */
 void usage() {
-    printf("---------helper---------\n");
-    printf("dns relay 1.0\n");
+    printf("-------------------------------------------------------\n");
+    printf("DNSRELAY, Version 1.0\n");
+    printf("Copyright(c) Yongjian Hu, Song Zhihao, Si Yutong\n\n");
     printf("Usage: [commands] [options]\n");
     printf("Commands:\n");
     printf("\t[-d|-dd], debug mode\n");
-    printf("\t-s [dns_server_addres]\n");
-    printf("\t-p [path_to_db_file]\n");
+    printf("\t[-s] <dns_server_addres>\n");
+    printf("\t[-p] <path_to_db_file>\n\n");
+    printf("Example: ./dnsrelay -d -s 219.141.136.10 -p ./data/dnsrelay.txt\n");
+    printf("-------------------------------------------------------\n");
 }
 
+void print_dns_server() {
+
+}
 
 /** Parse the exec options.
  * --------------------------
@@ -85,3 +91,96 @@ void print_send_recv(char *send_recv, struct sockaddr_in *addr, unsigned char *b
     }
     printf("\n");
 }
+
+
+void print_buf_header(const unsigned char *buf)
+{
+    struct header header;
+    buf2header(buf, &header);
+    print_header(&header);
+}
+
+void buf2header(const unsigned char *buf, struct header *header)
+{
+    memcpy(header, buf, sizeof(struct header));
+    header->id = ntohs(header->id);
+    header->qd_count = ntohs(header->qd_count);
+    header->an_count = ntohs(header->an_count);
+    header->ns_count = ntohs(header->ns_count);
+    header->ar_count = ntohs(header->ar_count);
+}
+
+void print_header(const struct header *header)
+{
+    struct {
+        uint8_t QR : 1;
+        uint8_t opcode : 4;
+        uint8_t AA : 1;
+        uint8_t TC : 1;
+        uint8_t RD : 1;
+        uint8_t RA : 1;
+        uint8_t zero : 3;
+        uint8_t rcode : 4; 
+    } flags;
+    memcpy(&flags, &header->flags, sizeof(flags));
+    printf("\tID %x%x, QR %d, OPCODE %d, AA %d, TC %d, RD %d, RA %d, Z: 0, RCODE: %d\n", header->id, flags.QR, flags.opcode, flags.AA, flags.TC, flags.RD, flags.RA, flags.rcode);
+    printf("\tQDCOUNT %d, ANCOUNT %d, NSCOUNT %d, ARCOUNT %d\n", header->qd_count, header->an_count, header->ns_count, header->ar_count);
+}
+
+#if defined(_WIN32) || defined(_WIN64)
+/* The original code is public domain -- Will Hartung 4/9/09 */
+/* Modifications, public domain as well, by Antti Haapala, 11/10/17
+   - Switched to getc on 5/23/19 */
+/** 
+Srouce:
+
+https://stackoverflow.com/questions/735126/are-there-alternate-implementations-of-gnu-getline-interface/47229318#47229318
+*/
+ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+ssize_t getline(char **lineptr, size_t *n, FILE *stream) {
+    size_t pos;
+    int c;
+
+    if (lineptr == NULL || stream == NULL || n == NULL) {
+        return -1;
+    }
+
+    c = getc(stream);
+    if (c == EOF) {
+        return -1;
+    }
+
+    if (*lineptr == NULL) {
+        *lineptr = malloc(128);
+        if (*lineptr == NULL) {
+            return -1;
+        }
+        *n = 128;
+    }
+
+    pos = 0;
+    while(c != EOF) {
+        if (pos + 1 >= *n) {
+            size_t new_size = *n + (*n >> 2);
+            if (new_size < 128) {
+                new_size = 128;
+            }
+            char *new_ptr = realloc(*lineptr, new_size);
+            if (new_ptr == NULL) {
+                return -1;
+            }
+            *n = new_size;
+            *lineptr = new_ptr;
+        }
+
+        ((unsigned char *)(*lineptr))[pos ++] = c;
+        if (c == '\n') {
+            break;
+        }
+        c = getc(stream);
+    }
+
+    (*lineptr)[pos] = '\0';
+    return pos;
+}
+#endif

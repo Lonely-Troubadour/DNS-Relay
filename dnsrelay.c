@@ -63,6 +63,9 @@ int main(int argc, char const *argv[])
 	}
     #endif
 
+    /* Usage */
+    usage();
+
     /* Parse exec options */
     parse_opt(argc, argv, &debug, &dns_server, &db);
 
