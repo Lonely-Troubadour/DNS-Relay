@@ -10,7 +10,4 @@ void print_send_recv(char *send_recv, struct sockaddr_in *addr, unsigned char *b
 void print_buf_header(const unsigned char *buf);
 void buf2header(const unsigned char *buf, struct header *header);
 void print_header(const struct header *header);
-#if defined(_WIN32) || defined(_WIN64)
-ssize_t getline(char **lineptr, size_t *n, FILE *stream);
-#endif
 #endif

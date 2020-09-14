@@ -164,6 +164,7 @@ Srouce:
 
 https://stackoverflow.com/questions/735126/are-there-alternate-implementations-of-gnu-getline-interface/47229318#47229318
 */
+ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 ssize_t getline(char **lineptr, size_t *n, FILE *stream) {
     size_t pos;
     int c;
