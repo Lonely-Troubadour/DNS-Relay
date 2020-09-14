@@ -24,7 +24,7 @@
 #define _DNSUTILS_H_
 
 #if defined(_WIN32) || defined(_WIN64)
-#include <winsock.h>
+#include <winsock2.h>
 #include <stdint.h>
 #else
 #include <arpa/inet.h>

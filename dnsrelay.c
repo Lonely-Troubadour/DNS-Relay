@@ -72,6 +72,7 @@ int main(int argc, char const *argv[])
     print_debug(debug);
     print_dns_server(dns_server);
     print_db_path(db);
+    if (debug == 2) print_db(db);
 
     /* Create socket */
     sock = init_socket();

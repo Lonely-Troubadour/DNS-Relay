@@ -79,7 +79,7 @@ int lookup (char *target_name, char **db, char *target_addr) {
     char *ip_addr = NULL;
     char *name = NULL;
     int flag = 0;
-    size_t len;
+    size_t len = 0;
 
     /* Check database file path */
     if (*db == NULL) {
@@ -120,5 +120,33 @@ int lookup (char *target_name, char **db, char *target_addr) {
 }
 
 void print_db(char *db) {
+    FILE *fp = NULL;
+    size_t len = 0;
+    char *buf = NULL;
 
+    /* Check database file path */
+    if (db == NULL) {
+        fprintf(stderr, "No specified Database path!\n");
+        exit(1);
+    }
+
+    /* Open local database */
+    fp = fopen(db, "r");
+    if (fp == NULL) {
+        perror("ERROR: Load local database failed");
+        exit(1);
+    }
+
+    printf("\n---------------Database content---------------\n");
+    
+    /* Read lines */
+    while(getline(&buf, &len, fp) != EOF) {
+        printf("%s", buf);
+    }
+
+    printf("------------End of Database content------------\n\n");
+
+    /* Close file and clean up memory */
+    if (buf) free(buf);
+    fclose(fp);
 }
