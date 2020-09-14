@@ -17,11 +17,13 @@ int main(int argc, char const *argv[])
     unsigned char request[BUF_SIZE];
     unsigned char response[BUF_SIZE];
     unsigned char recv[BUF_SIZE];
+    unsigned short id;
     
     /* Exec options */
     char *db = NULL;
     char *dns_server = NULL;
     int debug = 0;
+    int op = 0;
 
     /* Socket address */
     struct sockaddr_in *dns_addr = NULL;
@@ -38,7 +40,6 @@ int main(int argc, char const *argv[])
     socklen_t server_addr_size = 0;
     socklen_t client_addr_size = sizeof(client_addr);
     int sock = 0;
-    int op = 0;
 
     time_t tm_now = time(0);
     char tm_str[64];
@@ -72,7 +73,6 @@ int main(int argc, char const *argv[])
     print_debug(debug);
     print_dns_server(dns_server);
     print_db_path(db);
-    if (debug == 2) print_db(db);
 
     /* Create socket */
     sock = init_socket();
@@ -157,6 +157,9 @@ int main(int argc, char const *argv[])
 
         switch(op) {
             case 0:
+                memcpy(&id , request, 2);
+                id++;
+                memcpy(request , &id, 2);
                  /* Send DNS request to dns server*/   
                 send_len = sendto(sock, request, request_len, 0, \
                 (struct sockaddr*)dns_addr, dns_addr_size);
@@ -190,6 +193,9 @@ int main(int argc, char const *argv[])
                 memset(response, 0, BUF_SIZE);
                 memcpy(response, recv, recv_len);
                 response_len = recv_len;
+                memcpy(&id , response, 2);
+                id--;
+                memcpy(response , &id, 2);
 
                 send_len = sendto(sock, response, response_len, 0, \
                 (struct sockaddr*)&client_addr, client_addr_size);
