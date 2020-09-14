@@ -122,7 +122,7 @@ void print_send_recv(char *send_recv, struct sockaddr_in *addr, unsigned char *b
     inet_ntop(AF_INET, &in, ip_str, sizeof(ip_str));
     ip = ip_str;
 #endif
-    printf("%s %s:%d  (%d bytes) ", send_recv, ip, port);
+    printf("%s %s:%d  (%d bytes) ", send_recv, ip, port, buf_len);
     for (int i=0; i<buf_len; ++i)
     {
         printf(" %x", buf[i]);
@@ -146,6 +146,7 @@ void buf2header(const unsigned char *buf, struct header *header)
     header->an_count = ntohs(header->an_count);
     header->ns_count = ntohs(header->ns_count);
     header->ar_count = ntohs(header->ar_count);
+    header->flags = ntohs(header->flags);
 }
 
 void print_header(const struct header *header)
@@ -161,6 +162,6 @@ void print_header(const struct header *header)
         uint8_t rcode : 4; 
     } flags;
     memcpy(&flags, &header->flags, sizeof(flags));
-    printf("\tID %x%x, QR %d, OPCODE %d, AA %d, TC %d, RD %d, RA %d, Z: 0, RCODE: %d\n", header->id, flags.QR, flags.opcode, flags.AA, flags.TC, flags.RD, flags.RA, flags.rcode);
+    printf("\tID %x, QR %d, OPCODE %d, AA %d, TC %d, RD %d, RA %d, Z: 0, RCODE: %d\n", header->id, flags.QR, flags.opcode, flags.AA, flags.TC, flags.RD, flags.RA, flags.rcode);
     printf("\tQDCOUNT %d, ANCOUNT %d, NSCOUNT %d, ARCOUNT %d\n", header->qd_count, header->an_count, header->ns_count, header->ar_count);
 }
