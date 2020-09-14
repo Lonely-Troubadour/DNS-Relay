@@ -32,6 +32,7 @@ typedef int socklen_t;
 #define PORT 53
 #define DNS_SERVER "114.114.114.114"
 #define LOCAL_SERVER "127.0.0.1"
+#define DB "./data/dnsrelay.txt"
 
 int init_socket();
 int gen_in_addr(struct sockaddr_in *dns_addr, unsigned int *dns_addr_len, \

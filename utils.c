@@ -17,16 +17,22 @@ void usage() {
     printf("-------------------------------------------------------\n");
 }
 
-void print_debug() {
-
+void print_debug(int debug) {
+    if (-1 < debug && debug < 3)
+        printf("Debug level: %d\n", debug);
 }
 
-void print_dns_server() {
-
+void print_dns_server(char *DNS_server) {
+    if (DNS_server)
+        printf("Name server: %s\n", DNS_server);
 }
 
 void print_db_path() {
-    
+
+}
+
+void print_db() {
+
 }
 
 /** Parse the exec options.
@@ -68,6 +74,24 @@ int parse_opt(int argc, const char **argv, int *debug, char **dns_server, char *
             exit(1);
         }
         i++;
+    }
+
+    if (*dns_server == NULL) {
+        *dns_server = (char *) malloc(sizeof(char) * MAX_LENGTH);
+        if (*dns_server == NULL) {
+            fprintf(stderr, "ERROR: DNS server addr initilization failed.");
+            exit(1);
+        }
+        strcpy(*dns_server, DNS_SERVER);
+    }
+
+    if (*db == NULL) {
+        *db = (char *) malloc(sizeof(char) * MAX_LENGTH);
+        if (*db == NULL) {
+            fprintf(stderr, "ERROR: database path initilization failed.");
+            exit(1);
+        }
+        strcpy(*db, DB);
     }
 
     return 0;

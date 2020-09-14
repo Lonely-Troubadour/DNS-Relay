@@ -6,6 +6,7 @@
 #include "dnsrelay.h"
 #include "dnsutils.h"
 #include "dbutils.h"
+#include "utils.h"
 
 int main(int argc, char const *argv[])
 {
@@ -54,20 +55,22 @@ int main(int argc, char const *argv[])
     }
 
     /* Windows initialization */
-    #if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
 		printf("WSAStartup failed\n");
 		return -1;
 	}
-    #endif
+#endif
 
     /* Usage */
     usage();
 
     /* Parse exec options */
     parse_opt(argc, argv, &debug, &dns_server, &db);
+    print_debug(debug);
+    print_dns_server(dns_server);
 
     /* Create socket */
     sock = init_socket();
@@ -99,15 +102,13 @@ int main(int argc, char const *argv[])
             perror("ERROR: Receive failed.");
             exit(1);
         }
-        if (debug == 2)
-        {
+
+        if (debug == 2) {
             print_send_recv("RECV from", &client_addr, recv, recv_len);
         }
 
-        if (recv_len > sizeof(struct header))
-        {
-            if (debug == 2)
-            {
+        if (recv_len > sizeof(struct header)) {
+            if (debug == 2) {
                 print_buf_header(recv);
             }
         }
@@ -119,8 +120,7 @@ int main(int argc, char const *argv[])
         }
 
         parse_count += 1;
-        if (debug == 1)
-        {
+        if (debug == 1) {
             char *ip = NULL;
 #if defined(_WIN32) || defined(_WIN64) 
             ip = inet_ntoa(client_addr.sin_addr);
@@ -138,8 +138,7 @@ int main(int argc, char const *argv[])
                 "  %d:  %s  Client %s\t%s, TYPE %d, CLASS %d\n",
                 parse_count, tm_str, ip, dnsquery.name, dnsquery.qtype, dnsquery.qclass);
         }
-        else if (debug == 2)
-        {
+        else if (debug == 2) {
             printf(
                 "Parse query sucess, {name: \"%s\", type: %d, class: %d}\n",
                 dnsquery.name, dnsquery.qtype, dnsquery.qclass);
@@ -166,8 +165,7 @@ int main(int argc, char const *argv[])
                 printf("Send success, packet length: \n");
                 printf("%d\n", send_len);
 
-                if (debug == 2)
-                {
+                if (debug == 2) {
                     print_send_recv("Send to", dns_addr, request, send_len);
                 }
 
@@ -182,8 +180,7 @@ int main(int argc, char const *argv[])
                 printf("Receive success, packet length: \n");
                 printf("%d\n", recv_len);
 
-                if (debug == 2)
-                {
+                if (debug == 2) {
                     print_send_recv("RECV from", dns_addr, recv, recv_len);
                 }
 
@@ -201,8 +198,7 @@ int main(int argc, char const *argv[])
                 printf("Send back success, packet length: \n");
                 printf("%d\n", send_len);
 
-                if (debug == 2)
-                {
+                if (debug == 2) {
                     print_send_recv("Send to", &client_addr, response, send_len);
                 }
 
