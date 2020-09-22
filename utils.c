@@ -54,12 +54,12 @@ int parse_opt(int argc, const char **argv, int *debug, char **dns_server, char *
             if (!argv[i]) {
                 fprintf(stderr, "ERROR: No specified option!\nPlease follow the usage below:\n");
                 usage();
-                exit(1);
+                return 1;
             }
             *dns_server = (char *) malloc(sizeof(char) * MAX_LENGTH);
             if (*dns_server == NULL) {
                 fprintf(stderr, "ERROR: DNS server addr initilization failed.");
-                exit(1);
+                return 1;
             }
             strcpy(*dns_server, argv[i]);
         } else if (!strcmp(argv[i], "-p")) {
@@ -67,18 +67,18 @@ int parse_opt(int argc, const char **argv, int *debug, char **dns_server, char *
             if (!argv[i]) {
                 fprintf(stderr, "ERROR: No specified option!\nPlease follow the usage below:\n");
                 usage();
-                exit(1);
+                return 1;
             }
             *db = (char *) malloc(sizeof(char) * MAX_LENGTH);
             if (*db == NULL) {
                 fprintf(stderr, "ERROR: database path initilization failed.");
-                exit(1);
+                return 1;
             }
             strcpy(*db, argv[i]);
         } else {
             fprintf(stderr, "ERROR: Unrecognized opt %s\nPlease follow the usage below:\n", argv[i]);
             usage();
-            exit(1);
+            return 1;
         }
         i++;
     }
@@ -87,7 +87,7 @@ int parse_opt(int argc, const char **argv, int *debug, char **dns_server, char *
         *dns_server = (char *) malloc(sizeof(char) * MAX_LENGTH);
         if (*dns_server == NULL) {
             fprintf(stderr, "ERROR: DNS server addr initilization failed.");
-            exit(1);
+            return 1;
         }
         strcpy(*dns_server, DNS_SERVER);
     }
@@ -96,7 +96,7 @@ int parse_opt(int argc, const char **argv, int *debug, char **dns_server, char *
         *db = (char *) malloc(sizeof(char) * MAX_LENGTH);
         if (*db == NULL) {
             fprintf(stderr, "ERROR: database path initilization failed.");
-            exit(1);
+            return 1;
         }
         strcpy(*db, DB);
     }

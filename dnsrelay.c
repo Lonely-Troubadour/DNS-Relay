@@ -70,7 +70,7 @@ int main(int argc, char const *argv[])
     usage();
 
     /* Parse exec options */
-    parse_opt(argc, argv, &debug, &dns_server, &db);
+    if (parse_opt(argc, argv, &debug, &dns_server, &db)) goto cleanup;
     print_debug(debug);
     print_dns_server(dns_server);
     print_db_path(db);
@@ -175,7 +175,7 @@ int main(int argc, char const *argv[])
                 send_len = sendto(sock_send, request, request_len, 0, \
                 (struct sockaddr*)dns_addr, dns_addr_size);
                 if (send_len < 0) {
-                    perror("ERROR: Send DNS request failed.\n");
+                    fprintf(stderr, "ERROR: Send DNS request failed.\n");
                     exit(1);
                 }
                 // printf("Send success, packet length: %d\n", send_len);
@@ -189,8 +189,8 @@ int main(int argc, char const *argv[])
                 recv_len = recvfrom(sock_send, recv, sizeof(recv), 0, \
                 (struct sockaddr*)dns_addr, &dns_addr_size);
                 if (recv_len < 0) {
-                    perror("ERROR: receive packet failed.\n");
-                    exit(1);
+                    fprintf(stderr, "ERROR: receive packet failed.\n");
+                    goto cleanup;
                 }
                 // printf("Receive success, packet length: %d\n", recv_len);
 
@@ -209,8 +209,8 @@ int main(int argc, char const *argv[])
                 send_len = sendto(sock_recv, response, response_len, 0, \
                 (struct sockaddr*)&client_addr, client_addr_size);
                 if (send_len < 0) {
-                    perror("ERROR: Send DNS request failed.\n");
-                    exit(1);
+                    fprintf(stderr, "ERROR: Send DNS request failed.\n");
+                    goto cleanup;
                 }
                 // printf("Send back success, packet length: %d\n", send_len);
 
@@ -225,8 +225,8 @@ int main(int argc, char const *argv[])
                 send_len = sendto(sock_recv, response, response_len, 0, \
                 (struct sockaddr*)&client_addr, client_addr_size);
                 if (send_len < 0) {
-                    perror("ERROR: Send DNS request failed.\n");
-                    exit(1);
+                    fprintf(stderr, "ERROR: Send DNS request failed.\n");
+                    goto cleanup;
                 }
                 // printf("Send back success, packet length: %d\n", send_len);
 
@@ -242,8 +242,9 @@ int main(int argc, char const *argv[])
     }
 
     /* Close socket and clean up memory */
-    close(sock_recv);
-    close(sock_send);
+cleanup:
+    if (sock_recv) close(sock_recv);
+    if (sock_send) close(sock_send);
     if (dns_addr) free(dns_addr);
     if (server_addr) free(server_addr);
     if (dns_server) free(dns_server);

@@ -90,8 +90,8 @@ int lookup (char *target_name, char **db, char *target_addr) {
     /* Open local database */
     fp = fopen(*db, "r");
     if (fp == NULL) {
-        perror("ERROR: Load local database failed");
-        exit(1);
+        fprintf(stderr, "ERROR: Load local database failed");
+        return 1;
     }
     
     /* Read lines */
@@ -127,14 +127,14 @@ void print_db(char *db) {
     /* Check database file path */
     if (db == NULL) {
         fprintf(stderr, "No specified Database path!\n");
-        exit(1);
+        return ;
     }
 
     /* Open local database */
     fp = fopen(db, "r");
     if (fp == NULL) {
-        perror("ERROR: Load local database failed");
-        exit(1);
+        fprintf(stderr, "ERROR: Load local database failed");
+        return ;
     }
 
     printf("\n---------------Database content---------------\n");
