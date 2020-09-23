@@ -28,7 +28,13 @@ to run the program. If the system is Windows, an administrative access is requir
 
 ## Usage
 
-*To be added*
+Usage: [commands] [options]
+Commands:
+    [-d|-dd], debug mode
+    [-s] <dns_server_addres>
+    [-p] <path_to_db_file>
+
+### Example: ./dnsrelay -d -s 219.141.136.10 -p ./data/dnsrelay.txt
 
 ## Troubleshooting
 
