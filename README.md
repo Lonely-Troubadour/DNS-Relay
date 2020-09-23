@@ -27,14 +27,16 @@ $ sudo ./dns-relay
 to run the program. If the system is Windows, an administrative access is required.
 
 ## Usage
+Usage: [commands] [options] \
+Commands: \
+&nbsp;&nbsp;&nbsp;&nbsp;    [-d|-dd], debug mode \
+&nbsp;&nbsp;&nbsp;&nbsp;    [-s] <dns_server_addres> \
+&nbsp;&nbsp;&nbsp;&nbsp;    [-p] <path_to_db_file> 
 
-Usage: [commands] [options]
-Commands:
-    [-d|-dd], debug mode
-    [-s] <dns_server_addres>
-    [-p] <path_to_db_file>
-
-### Example: ./dnsrelay -d -s 219.141.136.10 -p ./data/dnsrelay.txt
+### Example: 
+```
+$ sudo ./dnsrelay -d -s 219.141.136.10 -p ./data/dnsrelay.txt
+```
 
 ## Troubleshooting
 
